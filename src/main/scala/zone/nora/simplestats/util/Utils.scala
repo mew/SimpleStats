@@ -28,13 +28,31 @@ object Utils {
     else if (player.has("newPackageRank")) player.get("newPackageRank").getAsString
     else if (player.has("packageRank")) player.get("packageRank").getAsString
     else null
-    if (playerRank == "MVP_PLUS" && player.get("monthlyPackageRank").getAsString == "SUPERSTAR")
-      playerRank = "MVP_PLUS_PLUS"
+    if (playerRank == "MVP_PLUS")
+      if (player.has("monthlyPackageRank") && player.get("monthlyPackageRank").getAsString == "SUPERSTAR")
+        playerRank = "MVP_PLUS_PLUS"
     if (rank == "NONE") playerRank = null
+    val colourNameToCode = Map(
+      "black" -> "\u00a70",
+      "dark_green" -> "\u00a72",
+      "dark_aqua" -> "\u00a73",
+      "dark_red" -> "\u00a74",
+      "dark_purple" -> "\u00a75",
+      "gold" -> "\u00a76",
+      "gray" -> "\u00a77",
+      "dark_gray" -> "\u00a78",
+      "blue" -> "\u00a79",
+      "green" -> "\u00a7a",
+      "aqua" -> "\u00a7b",
+      "red" -> "\u00a7c",
+      "light_purple" -> "\u00a7d",
+      "yellow" -> "\u00a7e",
+      "white" -> "\u00a7f"
+    )
     val plusColour = if (player.has("rankPlusColor"))
-      colourNameToCode(player.get("rankPlusColor").getAsString)
+      colourNameToCode(player.get("rankPlusColor").getAsString.toLowerCase) else "\u00a7c"
     val plusPlusColour = if (player.has("monthlyRankColor"))
-      colourNameToCode(player.get("monthlyRankColor").getAsString)
+      colourNameToCode(player.get("monthlyRankColor").getAsString.toLowerCase) else "\u00a76"
     playerRank match {
       case "VIP" => "\u00a7a[VIP]"
       case "VIP_PLUS" => "\u00a7a[VIP\u00a76+\u00a7a]"
@@ -50,22 +68,25 @@ object Utils {
     }
   }
 
-  def colourNameToCode(colour: String): String = colour.toLowerCase() match {
-    case "black" => "\u00a70"
-    case "dark_green" => "\u00a72"
-    case "dark_aqua" => "\u00a73"
-    case "dark_red" => "\u00a74"
-    case "dark_purple" => "\u00a75"
-    case "gold" => "\u00a76"
-    case "gray" => "\u00a77"
-    case "dark_gray" => "\u00a78"
-    case "blue" => "\u00a79"
-    case "green" => "\u00a7a"
-    case "aqua" => "\u00a7b"
-    case "red" => "\u00a7c"
-    case "light_purple" => "\u00a7d"
-    case "yellow" => "\u00a7e"
-    case "white" => "\u00a7f"
+  def getWarlordsClassLevel(bg: JsonObject, wlClass: String): Int = {
+    val list = List(
+      "cooldown",
+      "critchance",
+      "critmultiplier",
+      "energy",
+      "health",
+      "skill1",
+      "skill2",
+      "skill3",
+      "skill4",
+      "skill5"
+    )
+    var total = 0
+    list.foreach { it =>
+      val key = s"${wlClass}_$it"
+      if (bg.has(key)) total += bg.get(key).getAsInt
+    }
+    total
   }
 
   def parseTime(time: Long): String = try
