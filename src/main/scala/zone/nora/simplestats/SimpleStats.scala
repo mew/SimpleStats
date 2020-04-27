@@ -3,15 +3,18 @@ package zone.nora.simplestats
 import java.io.File
 
 import net.minecraftforge.client.ClientCommandHandler
+import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.Mod.EventHandler
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
 import org.apache.commons.io.FileUtils
 import zone.nora.simplestats.commands.{SetKeyCommand, StatsCommand}
+import zone.nora.simplestats.listener.EventListener
 import zone.nora.simplestats.util.Utils
 
-@Mod(modid = "SimpleStats", name = "SimpleStats", version = "1.0", modLanguage = "scala")
+@Mod(modid = "SimpleStats", name = "SimpleStats", version = SimpleStats.VERSION, modLanguage = "scala")
 object SimpleStats {
+  final val VERSION = "1.0"
   var apiKey = ""
   var validKey = false
 
@@ -32,6 +35,7 @@ object SimpleStats {
           validKey = true
           apiKey = s
         }
+        if (Utils.checkForUpdates() != VERSION) MinecraftForge.EVENT_BUS.register(new EventListener)
       }
     })
     thread.start()

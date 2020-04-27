@@ -1,5 +1,7 @@
 package zone.nora.simplestats.util
 
+import java.io.{BufferedReader, InputStreamReader}
+import java.net.URL
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Date, UUID}
@@ -8,9 +10,10 @@ import com.google.gson.JsonObject
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
 import net.minecraft.util.ChatComponentText
+import zone.nora.simplestats.SimpleStats
 
 object Utils {
-  private final val PREFIX = "\u00a79[\u00a76SS\u00a79] \u00a7f"
+  final val PREFIX = "\u00a79[\u00a76SS\u00a79] \u00a7f"
   private val mc = Minecraft.getMinecraft
 
   def validateKey(apiKey: String): Boolean = try {
@@ -102,5 +105,18 @@ object Utils {
     val dash = Math.floor((280 * mc.gameSettings.chatWidth + 40) / 320 * (1 / mc.gameSettings.chatScale) * 53).toInt
     for (_ <- 1 to dash) dashes.append("-")
     mc.thePlayer.addChatMessage(new ChatComponentText(s"\u00a79\u00a7m$dashes"))
+  }
+
+  def checkForUpdates(): String = {
+    try {
+      val url = new URL("https://raw.githubusercontent.com/mew/simplestats/master/version.txt")
+      val connection = url.openConnection
+      connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 5.1; rv:19.0) Gecko/20100101 Firefox/19.0")
+      connection.connect()
+      val serverResponse: BufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream))
+      val response: String = serverResponse.readLine
+      serverResponse.close()
+      response
+    } catch { case _: Exception => SimpleStats.VERSION }
   }
 }
