@@ -1,5 +1,6 @@
 package zone.nora.simplestats.commands
 
+import java.math.BigInteger
 import java.util.UUID
 
 import com.google.gson.JsonObject
@@ -14,8 +15,6 @@ class StatsCommand extends CommandBase {
 
   override def getCommandUsage(sender: ICommandSender): String = "/stats [player]"
 
-  //override def getCommandAliases: util.List[String] = ???
-
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
     val thread = new Thread(new Runnable {
       override def run(): Unit = {
@@ -28,7 +27,7 @@ class StatsCommand extends CommandBase {
           return
         }
         if (args.isEmpty) {
-          Utils.error("/stats [player]")
+          Utils.error("/stats [player] [game]")
           return
         }
 
@@ -61,7 +60,9 @@ class StatsCommand extends CommandBase {
           } catch {
             case _: NullPointerException => "N/A"
           })
-          printStat("First Login", Utils.parseTime(player.get("firstLogin").getAsLong))
+          // https://steveridout.github.io/mongo-object-time/
+          printStat("First Login",
+            Utils.parseTime(new BigInteger(player.get("_id").getAsString.substring(0, 8), 16).longValue*1000))
           printStat("Last Login", try {
             Utils.parseTime(player.get("lastLogin").getAsLong)
           } catch {
@@ -88,10 +89,10 @@ class StatsCommand extends CommandBase {
               val arena = getGameStats(player, "Arena")
               if (arena == null) return
               firstLine(player, "Arena Brawl")
-              printStat("1v1 Wins", arena.get("wins_ffa"))
+              printStat("1v1 Wins", arena.get("wins_1v1"))
               printStat("2v2 Wins", arena.get("wins_2v2"))
               printStat("4v4 Wins", arena.get("wins_4v4"))
-              printStat("1v1 Losses", arena.get("losses_ffa"))
+              printStat("1v1 Losses", arena.get("losses_1v1"))
               printStat("2v2 Losses", arena.get("losses_2v2"))
               printStat("4v4 Losses", arena.get("losses_4v4"))
               printStat("Coins", arena.get("coins"))
@@ -110,7 +111,6 @@ class StatsCommand extends CommandBase {
               printStat("Wins", bg.get("wins"))
               printStat("Losses", bg.get("losses"))
               printStat("Coins", bg.get("coins"))
-              val achievements = player.get("achievements").getAsJsonObject
               printStat("Mage Level", Utils.getWarlordsClassLevel(bg, "mage"))
               printStat("Paladin Level", Utils.getWarlordsClassLevel(bg, "paladin"))
               printStat("Shaman Level", Utils.getWarlordsClassLevel(bg, "shaman"))
@@ -307,7 +307,31 @@ class StatsCommand extends CommandBase {
               printStat("Finals", mw.get("total_final_kills"))
               printStat("Final Deaths", mw.get("final_deaths"))
               printStat("Selected Class", mw.get("chosen_class"))
-            case _ => Utils.error(s"${args(1)} is not a valid game.")
+            case _ =>
+              Utils.error(s"${args(1)} is not a valid game.")
+              Utils.error("Try one of these:")
+              List(
+                "arcade",
+                "arenabrawl",
+                "warlords",
+                "bedwars",
+                "duels",
+                "tkr",
+                "blitz",
+                "legacy",
+                "cvc",
+                "paintball",
+                "quake",
+                "skywars",
+                "speeduhc",
+                "smash",
+                "tnt",
+                "crazywalls",
+                "uhc",
+                "vampirez",
+                "walls",
+                "megawalls"
+              ).foreach { it => Utils.put(s"\u00a78- \u00a7a$it") }
           }
           Utils.breakline()
         }
@@ -319,24 +343,22 @@ class StatsCommand extends CommandBase {
 
   override def canCommandSenderUseCommand(sender: ICommandSender): Boolean = true
 
-  override def isUsernameIndex(args: Array[String], index: Int): Boolean = true
+  override def isUsernameIndex(args: Array[String], index: Int): Boolean = args.isEmpty | args.length == 1
 
   private def getGameStats(player: JsonObject, game: String): JsonObject = try {
     player.get("stats").getAsJsonObject.get(game).getAsJsonObject
   } catch {
-    case _: Exception => {
+    case _: Exception =>
       Utils.error(s"${player.get("displayname").getAsString} has no stats in $game")
       Utils.breakline()
       null
-    }
   }
 
   private def firstLine(player: JsonObject, game: String = ""): Unit = {
     val s = if (game == "") "S" else s"$game s"
-    val rank = try { Utils.getRank(player) } catch { case e: Exception => {
-      e.printStackTrace()
+    val rank = try { Utils.getRank(player) } catch { case e: Exception => e.printStackTrace()
       ""
-    } }
+    }
     Utils.put(s"${s}tats of ${if (rank.endsWith("]")) s"$rank " else rank}${player.get("displayname").getAsString}")
   }
 
