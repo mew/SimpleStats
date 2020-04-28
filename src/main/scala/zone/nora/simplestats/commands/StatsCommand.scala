@@ -49,9 +49,9 @@ class StatsCommand extends CommandBase {
           Utils.breakline()
           firstLine(player)
           printStat("Hypixel Level", try {
-            ILeveling.getLevel(player.get("networkExp").getAsDouble)
+            ILeveling.getLevel(player.get("networkExp").getAsDouble).toInt
           } catch {
-            case _: NullPointerException => "1"
+            case _: NullPointerException => 1
           })
           printStat("Achievement Points", player.get("achievementPoints"))
           printStat("Karma", player.get("karma"))
