@@ -92,6 +92,8 @@ object Utils {
     total
   }
 
+  def roundDouble(n: Double): Double = { val s = math pow (10, 2); (math round n * s) / s }
+
   def parseTime(time: Long): String = try
     new SimpleDateFormat("dd/MM/yyyy").format(new Date(new Timestamp(time).getTime))
   catch { case _: Exception => "N/A" } // Hypixel Staff can hide their stats, which causes this function to freak out.

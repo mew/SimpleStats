@@ -1,14 +1,17 @@
 package zone.nora.simplestats.commands
 
 import java.math.BigInteger
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 import com.google.gson.JsonObject
 import net.hypixel.api.HypixelAPI
 import net.hypixel.api.util.ILeveling
+import net.minecraft.client.Minecraft
 import net.minecraft.command.{CommandBase, ICommandSender}
+import net.minecraft.event.ClickEvent
 import zone.nora.simplestats.SimpleStats
-import zone.nora.simplestats.util.Utils
+import zone.nora.simplestats.util.{ChatComponentBuilder, Utils}
 
 class StatsCommand extends CommandBase {
   override def getCommandName: String = "stats"
@@ -215,7 +218,8 @@ class StatsCommand extends CommandBase {
                 val swExp = sw.get("skywars_experience").getAsInt.toDouble
                 val exps = List(0, 20, 70, 150, 250, 500, 1000, 2000, 3500, 6000, 10000, 15000)
                 if (swExp >= 15000) (swExp - 15000) / 10000 + 12
-                else for (i <- 0 to exps.size) if (swExp < exps(i)) 1 + i + (swExp - exps(i) / (exps(i) - exps(i - 1)))
+                else for (i <- 0 to exps.size) if (swExp < exps(i))
+                  Utils.roundDouble(1 + i + (swExp - exps(i) / (exps(i) - exps(i - 1))))
               } catch {
                 case _: Exception => "Error"
               }
@@ -307,6 +311,31 @@ class StatsCommand extends CommandBase {
               printStat("Finals", mw.get("total_final_kills"))
               printStat("Final Deaths", mw.get("final_deaths"))
               printStat("Selected Class", mw.get("chosen_class"))
+            case "g" | "guild" =>
+              val guildReply = api.getGuildByPlayer(player.get("uuid").getAsString).get()
+              if (!guildReply.isSuccess) {
+                Utils.error(s"Unexpected error getting ${player.get("displayname").getAsString}'s Guild:'")
+                Utils.error(guildReply.getCause)
+                return
+              }
+              val guild = guildReply.getGuild
+              if (guild == null) {
+                Utils.error(s"${player.get("displayname").getAsString} is not in a guild.")
+                return
+              }
+              firstLine(player, guild = true)
+              printStat("Name", guild.getName)
+              printStat("Tag", guild.getTag)
+              printStat("Level", getGuildLevel(guild.getExp))
+              printStat("Created", DateTimeFormatter.ISO_DATE.format(guild.getCreated))
+              printStat("Members", s"${guild.getMembers.size()}/125")
+              Minecraft.getMinecraft.thePlayer.addChatMessage(
+                ChatComponentBuilder.of("\u00a79Click to view on Plancke.io")
+                  .setHoverEvent(s"Click here to view ${guild.getName} on Plancke.io")
+                  .setClickEvent(
+                    ClickEvent.Action.OPEN_URL,
+                    s"https://ncke.io/hypixel/guild/player/${player.get("uuid").getAsString}"
+                  ).build)
             case _ =>
               Utils.error(s"${args(1)} is not a valid game.")
               Utils.error("Try one of these:")
@@ -345,6 +374,26 @@ class StatsCommand extends CommandBase {
 
   override def isUsernameIndex(args: Array[String], index: Int): Boolean = args.isEmpty | args.length == 1
 
+  private def getGuildLevel(experience: Long): Double = {
+    var exp = experience
+    val exps = List(
+      100000, 150000, 250000, 500000, 750000, 1000000, 1250000, 1500000, 2000000, 2500000, 2500000, 2500000, 2500000,
+      2500000
+    )
+    var c = 0.0
+    exps.foreach { it =>
+      if (it > exp) c + Utils.roundDouble(it / exp)
+      exp -= it
+      c += 1
+    }
+    val increment = 3000000
+    while (exp > increment) {
+      c += 1
+      exp -= increment
+    }
+    c.+(Utils.roundDouble(exp / increment))
+  }
+
   private def getGameStats(player: JsonObject, game: String): JsonObject = try {
     player.get("stats").getAsJsonObject.get(game).getAsJsonObject
   } catch {
@@ -354,12 +403,10 @@ class StatsCommand extends CommandBase {
       null
   }
 
-  private def firstLine(player: JsonObject, game: String = ""): Unit = {
-    val s = if (game == "") "S" else s"$game s"
-    val rank = try { Utils.getRank(player) } catch { case e: Exception => e.printStackTrace()
-      ""
-    }
-    Utils.put(s"${s}tats of ${if (rank.endsWith("]")) s"$rank " else rank}${player.get("displayname").getAsString}")
+  private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false): Unit = {
+    val s = if (game == "" && !guild) "Stats" else if (guild) "Guild" else s"$game stats"
+    val rank = try { Utils.getRank(player) } catch { case e: Exception => e.printStackTrace(); "" }
+    Utils.put(s"$s of ${if (rank.endsWith("]")) s"$rank " else rank}${player.get("displayname").getAsString}")
   }
 
   private def printStat(name: String, value: Any): Unit = Utils.put(s"$name: ${if (value == null) "N/A" else value}")
