@@ -15,7 +15,7 @@ class SetKeyCommand extends CommandBase {
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
     val thread = new Thread(new Runnable {
       override def run(): Unit = {
-        if (args.isEmpty) Utils.error("/setkey [api-key]") else {
+        if (args.isEmpty) Utils.error("/setkey [api-key]", prefix = true) else {
           val key = args(0)
           if (key.length == 36 && Utils.validateKey(key)) {
             SimpleStats.apiKey = key
@@ -23,8 +23,8 @@ class SetKeyCommand extends CommandBase {
             val file = new File("apikey.txt")
             if (!file.exists()) file.createNewFile()
             FileUtils.writeStringToFile(file, key)
-            Utils.put("\u00a7aYour API Key has been set :)")
-          } else Utils.error("This is not a valid Hypixel API Key.")
+            Utils.put("\u00a7aYour API Key has been set :)", prefix = true)
+          } else Utils.error("This is not a valid Hypixel API Key.", prefix = true)
         }
       }
     })
