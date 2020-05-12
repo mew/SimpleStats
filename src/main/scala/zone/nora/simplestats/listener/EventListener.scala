@@ -17,7 +17,7 @@ class EventListener {
         Utils.put("An update is available for SimpleStats!")
         Utils.put("You can Download it here:")
         Minecraft.getMinecraft.thePlayer.addChatMessage(
-          ChatComponentBuilder.of(s"${Utils.PREFIX}\u00a76>> \u00a79Click Here \u00a76<<")
+          ChatComponentBuilder.of("\u00a76>> \u00a79Click Here \u00a76<<")
             .setHoverEvent("\u00a79Click!")
             .setClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mew/SimpleStats/releases")
             .build()

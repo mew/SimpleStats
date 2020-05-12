@@ -1,7 +1,7 @@
 package zone.nora.simplestats.commands
 
 import java.math.BigInteger
-import java.time.format.DateTimeFormatter
+import java.sql.Timestamp
 import java.util.UUID
 
 import com.google.gson.{JsonElement, JsonObject}
@@ -55,7 +55,7 @@ class StatsCommand extends CommandBase {
           printStat("Discord", try {
             player.get("socialMedia").getAsJsonObject.get("links").getAsJsonObject.get("DISCORD").getAsString
           } catch {
-            case _: NullPointerException => "N/A"
+            case _: NullPointerException => null
           })
           // https://steveridout.github.io/mongo-object-time/
           printStat("First Login",
@@ -320,13 +320,13 @@ class StatsCommand extends CommandBase {
               }
               firstLine(player, guild = true)
               printStat("Name", guild.getName)
-              printStat("Tag", guild.getTag)
+              printStat("Tag", s"[${guild.getTag}]")
               printStat("Level", getGuildLevel(guild.getExp))
-              printStat("Created", DateTimeFormatter.ISO_DATE.format(guild.getCreated))
+              printStat("Created", Utils.parseTime(Timestamp.valueOf(guild.getCreated.toLocalDateTime).getTime))
               printStat("Members", s"${guild.getMembers.size()}/125")
               Minecraft.getMinecraft.thePlayer.addChatMessage(
-                ChatComponentBuilder.of("\u00a79Click to view on Plancke.io")
-                  .setHoverEvent(s"Click here to view ${guild.getName} on Plancke.io")
+                ChatComponentBuilder.of("\u00a7aClick to view on \u00a73plancke.io")
+                  .setHoverEvent(s"Click here to view ${guild.getName} on plancke.io")
                   .setClickEvent(
                     ClickEvent.Action.OPEN_URL,
                     s"https://ncke.io/hypixel/guild/player/${player.get("uuid").getAsString}"
