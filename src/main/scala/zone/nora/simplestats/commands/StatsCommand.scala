@@ -226,7 +226,7 @@ class StatsCommand extends CommandBase {
               if (suhc == null) { api.shutdown(); return }
               firstLine(player, "Speed UHC")
               printStat("Kills", suhc.get("kills"))
-              printStat("Wins", suhc.get("deaths"))
+              printStat("Wins", suhc.get("wins"))
               printStat("Deaths", suhc.get("deaths"))
               printStat("Coins", suhc.get("coins"))
               try {
