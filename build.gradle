@@ -8,10 +8,12 @@ buildscript {
         }
     }
     dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'scala'
 
 /*
@@ -73,3 +75,25 @@ processResources
         exclude 'mcmod.info'
     }
 }
+
+reobf {
+    shadowJar { /*mappingType = 'SEARGE'*/ }
+}
+
+shadowJar {
+    // shading to prevent compatibility issues with other mods.
+    relocate("net.hypixel", "zone.nora.simplestats.libs.net.hypixel")
+
+    // hypixel sucks lol
+    exclude("org/**")
+    exclude("com/**")
+    exclude("mozilla/**")
+    exclude("dummyThing")
+    exclude("META-INF/**")
+}
+
+jar {
+    exclude("META-INF/**")
+}
+
+tasks.build.dependsOn shadowJar
