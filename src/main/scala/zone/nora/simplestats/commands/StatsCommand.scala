@@ -13,12 +13,17 @@ import net.minecraft.event.ClickEvent
 import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.util.{ChatComponentBuilder, Utils}
 
+import scala.collection.mutable.ListBuffer
+
 class StatsCommand extends CommandBase {
+  private val lines: ListBuffer[String] = new ListBuffer
+
   override def getCommandName: String = "stats"
 
   override def getCommandUsage(sender: ICommandSender): String = "/stats [player]"
 
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
+    lines.clear()
     val thread = new Thread(new Runnable {
       override def run(): Unit = {
         if (!SimpleStats.validKey) {
@@ -43,7 +48,6 @@ class StatsCommand extends CommandBase {
         if (player == null) { Utils.error("Invalid player.", prefix = true); api.shutdown(); return }
 
         if (args.length == 1) {
-          Utils.breakline()
           firstLine(player)
           printStat("Hypixel Level", try {
             ILeveling.getLevel(player.get("networkExp").getAsDouble).toInt
@@ -71,11 +75,15 @@ class StatsCommand extends CommandBase {
             case _: NullPointerException => false
           })
           Utils.breakline()
+          lines.foreach { it => Utils.put(it) }
+          Utils.breakline()
         } else {
           if (!player.has("stats")) {
             Utils.error("This player has manually hidden their stats :(")
           }
-          Utils.breakline()
+          //Utils.breakline()
+          var b = true
+          var g = (false, "")
           args(1).toLowerCase match {
             case "arc" | "arcade" =>
               val arcade = getGameStats(player, "Arcade")
@@ -323,15 +331,11 @@ class StatsCommand extends CommandBase {
               printStat("Tag", s"[${guild.getTag}]")
               printStat("Level", getGuildLevel(guild.getExp))
               printStat("Created", Utils.parseTime(Timestamp.valueOf(guild.getCreated.toLocalDateTime).getTime))
-              printStat("Members", s"${guild.getMembers.size()}/125")
-              Minecraft.getMinecraft.thePlayer.addChatMessage(
-                ChatComponentBuilder.of("\u00a7aClick to view on \u00a73plancke.io")
-                  .setHoverEvent(s"Click here to view ${guild.getName} on plancke.io")
-                  .setClickEvent(
-                    ClickEvent.Action.OPEN_URL,
-                    s"https://ncke.io/hypixel/guild/player/${player.get("uuid").getAsString}"
-                  ).build)
+              printStat("Members", s"${guild.getMembers.size}/125")
+              g = (true, guild.getName)
             case _ =>
+              b = false
+              Utils.breakline()
               Utils.error(s"${args(1)} is not a valid game.")
               Utils.error("Try one of these:")
               List(
@@ -340,6 +344,15 @@ class StatsCommand extends CommandBase {
                 "guild"
               ).foreach { it => Utils.put(s"\u00a78- \u00a7a$it") }
           }
+          if (b) Utils.breakline()
+          lines.foreach { it => Utils.put(it) }
+          if (g._1) Minecraft.getMinecraft.thePlayer.addChatMessage(
+            ChatComponentBuilder.of("\u00a7aClick to view on \u00a73plancke.io")
+              .setHoverEvent(s"Click here to view ${g._2} on plancke.io")
+              .setClickEvent(
+                ClickEvent.Action.OPEN_URL,
+                s"https://ncke.io/hypixel/guild/player/${player.get("uuid").getAsString}"
+              ).build)
           Utils.breakline()
         }
         api.shutdown()
@@ -385,7 +398,7 @@ class StatsCommand extends CommandBase {
   private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false): Unit = {
     val s = if (game == "" && !guild) "Stats" else if (guild) "Guild" else s"$game stats"
     val rank = try { Utils.getRank(player) } catch { case e: Exception => e.printStackTrace(); "" }
-    Utils.put(s"$s of ${if (rank.endsWith("]")) s"$rank " else rank}${player.get("displayname").getAsString}")
+    lines.append(s"$s of ${if (rank.endsWith("]")) s"$rank " else rank}${player.get("displayname").getAsString}")
   }
 
   private def printStat(name: String, value: Any): Unit = {
@@ -404,6 +417,6 @@ class StatsCommand extends CommandBase {
       case _ => '6'
     }
     val statColour = s"\u00a7${f(value)}"
-    Utils.put(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$value"}")
+    lines.append(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$value"}")
   }
 }
