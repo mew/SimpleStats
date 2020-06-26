@@ -14,7 +14,7 @@ import zone.nora.simplestats.util.Utils
 
 @Mod(modid = "SimpleStats", name = "SimpleStats", version = SimpleStats.VERSION, modLanguage = "scala")
 object SimpleStats {
-  final val VERSION = "1.1"
+  final val VERSION = "1.1.1"
   var apiKey = ""
   var validKey = false
 
