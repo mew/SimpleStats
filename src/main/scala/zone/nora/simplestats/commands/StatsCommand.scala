@@ -218,12 +218,11 @@ class StatsCommand extends CommandBase {
               // https://hypixel.net/posts/19293045
               val swLevel = try {
                 val swExp = sw.get("skywars_experience").getAsInt.toDouble
-                val exps = List(0, 20, 70, 150, 250, 500, 1000, 2000, 3500, 6000, 10000, 15000)
-                if (swExp >= 15000) (swExp - 15000) / 10000 + 12
-                else for (i <- 0 to exps.size) if (swExp < exps(i))
-                  Utils.roundDouble(1 + i + (swExp - exps(i) / (exps(i) - exps(i - 1))))
+                val exps = 0 :: 20 :: 70 :: 150 :: 250 :: 500 :: 1000 :: 2000 :: 3500 :: 6000 :: 10000 :: 15000 :: Nil
+                if (swExp >= 1500) (swExp - 15000) / 10000 + 12
+                else for (i <- exps.indices) if (swExp < exps(i)) 1 + i + (swExp - exps(i - 1)) / (exps(i) - exps(i - 1))
               } catch {
-                case _: Exception => "Error"
+                case e: Exception => e.printStackTrace(); "Error"
               }
               printStat("SkyWars Level", swLevel)
               printStat("Coins", sw.get("coins"))
