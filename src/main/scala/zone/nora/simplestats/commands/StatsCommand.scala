@@ -258,6 +258,18 @@ class StatsCommand extends CommandBase {
               printStat("Coins", sw.get("coins"))
               printStat("Souls", sw.get("souls"))
               printStat("Heads", sw.get("heads"))
+            case "sc" | "skyclash" =>
+              val sc = getGameStats(player, "SkyClash")
+              if (sc == null) {
+                api.shutdown(); return
+              }
+              firstLine(player, "SkyClash")
+              printStat("Kills", sc.get("kills"))
+              printStat("Wins", sc.get("wins"))
+              printStat("Deaths", sc.get("deaths"))
+              printStat("Coins", sc.get("coins"))
+              printStat("Winstreak", sc.get("win_streak"))
+              printStat("Card Packs", sc.get("card_packs"))
             case "suhc" | "speed" | "speeduhc" =>
               val suhc = getGameStats(player, "SpeedUHC")
               if (suhc == null) {
@@ -283,6 +295,7 @@ class StatsCommand extends CommandBase {
               printStat("Kills", sh.get("kills"))
               printStat("Wins", sh.get("wins"))
               printStat("Deaths", sh.get("deaths"))
+              printStat("Coins", sh.get("coins"))
               printStat("Smash Level", sh.get("smashLevel"))
               val activeClass = sh.get("active_class").getAsString
               val prestige = if (sh.has(s"pg_$activeClass")) sh.get(s"pg_$activeClass").getAsInt else 0
@@ -362,6 +375,20 @@ class StatsCommand extends CommandBase {
               printStat("Finals", mw.get("total_final_kills"))
               printStat("Final Deaths", mw.get("final_deaths"))
               printStat("Selected Class", mw.get("chosen_class"))
+            case "mm" | "murder" | "murdermystery" =>
+              val mm = getGameStats(player, "MurderMystery")
+              if (mm == null) {
+                api.shutdown(); return
+              }
+              firstLine(player, "Murder Mystery")
+              printStat("Coins", mm.get("coins"))
+              printStat("Murderer Wins", mm.get("murderer_wins"))
+              printStat("Murderer Kills", mm.get("kills_as_murderer"))
+              printStat("Detective Wins", mm.get("detective_wins"))
+              printStat("Assassins Wins", mm.get("wins_MURDER_ASSASSINS"))
+              printStat("Infection Wins", mm.get("wins_MURDER_INFECTION"))
+              printStat("Murderer Chance", s"${mm.get("murderer_chance")}%")
+              printStat("Detective Chance", s"${mm.get("detective_chance")}%")
             case "g" | "guild" =>
               val guildReply = api.getGuildByPlayer(player.get("uuid").getAsString).get()
               if (!guildReply.isSuccess) {
@@ -389,8 +416,8 @@ class StatsCommand extends CommandBase {
               Utils.error("Try one of these:")
               List(
                 "arcade", "arenabrawl", "warlords", "bedwars", "duels", "tkr", "blitz", "legacy", "cvc", "paintball",
-                "quake", "skywars", "speeduhc", "smash", "tnt", "crazywalls", "uhc", "vampirez", "walls", "megawalls",
-                "guild"
+                "quake", "skywars", "skyclash", "speeduhc", "smash", "tnt", "crazywalls", "uhc", "vampirez", "walls",
+                "megawalls", "murdermystery", "guild"
               ).foreach { it => Utils.put(s"\u00a78- \u00a7a$it") }
           }
           if (b) Utils.breakline()
