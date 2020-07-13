@@ -512,7 +512,7 @@ class StatsCommand extends CommandBase {
     }
 
     val statColour = s"\u00a7${f(value)}"
-    val done = y(value.toString)
+    val done = if (value == null) null else y(value.toString)
     lines.append(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$done"}")
   }
 
