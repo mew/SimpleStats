@@ -31,6 +31,45 @@ class Stats(api: HypixelAPI, name: String) {
   val lines: ListBuffer[String] = new ListBuffer
 
   /**
+   * Prints the player's Hypixel profile
+   */
+  def printStats(): Unit = {
+    firstLine(player)
+    saveStat("Hypixel Level", try {
+      ILeveling.getLevel(player.get("networkExp").getAsDouble).toInt
+    } catch {
+      case _: NullPointerException => 1
+    })
+
+    saveStat("Achievement Points", player.get("achievementPoints"))
+    saveStat("Karma", player.get("karma"))
+    saveStat("Discord", try {
+      player.get("socialMedia").getAsJsonObject.get("links").getAsJsonObject.get("DISCORD").getAsString
+    } catch {
+      case _: NullPointerException => null
+    })
+
+    // https://steveridout.github.io/mongo-object-time/
+    saveStat("First Login",
+      Utils.parseTime(new BigInteger(player.get("_id").getAsString.substring(0, 8), 16).longValue * 1000))
+    saveStat("Last Login", try {
+      Utils.parseTime(player.get("lastLogin").getAsLong)
+    } catch {
+      case _: NullPointerException => "Hidden"
+    })
+
+    saveStat("Online", try {
+      player.get("lastLogin").getAsLong > player.get("lastLogout").getAsLong
+    } catch {
+      case _: NullPointerException => false
+    })
+
+    Utils.breakLine()
+    lines.foreach { it => Utils.put(it) }
+    Utils.breakLine()
+  }
+
+  /**
    * Prints the stats of a player to the minecraft chat.
    *
    * @param game Name of the game.
@@ -448,45 +487,6 @@ class Stats(api: HypixelAPI, name: String) {
   }
 
   /**
-   * Prints the player's Hypixel profile
-   */
-  def printStats(): Unit = {
-    firstLine(player)
-    saveStat("Hypixel Level", try {
-      ILeveling.getLevel(player.get("networkExp").getAsDouble).toInt
-    } catch {
-      case _: NullPointerException => 1
-    })
-
-    saveStat("Achievement Points", player.get("achievementPoints"))
-    saveStat("Karma", player.get("karma"))
-    saveStat("Discord", try {
-      player.get("socialMedia").getAsJsonObject.get("links").getAsJsonObject.get("DISCORD").getAsString
-    } catch {
-      case _: NullPointerException => null
-    })
-
-    // https://steveridout.github.io/mongo-object-time/
-    saveStat("First Login",
-      Utils.parseTime(new BigInteger(player.get("_id").getAsString.substring(0, 8), 16).longValue * 1000))
-    saveStat("Last Login", try {
-      Utils.parseTime(player.get("lastLogin").getAsLong)
-    } catch {
-      case _: NullPointerException => "Hidden"
-    })
-
-    saveStat("Online", try {
-      player.get("lastLogin").getAsLong > player.get("lastLogout").getAsLong
-    } catch {
-      case _: NullPointerException => false
-    })
-
-    Utils.breakLine()
-    lines.foreach { it => Utils.put(it) }
-    Utils.breakLine()
-  }
-
-  /**
    * Saves the stat value into line buffer in key-value format.
    */
   private def saveStat(name: String, value: Any): Unit = {
@@ -530,10 +530,8 @@ class Stats(api: HypixelAPI, name: String) {
    */
   private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false): Unit = {
     val s = if (game == "" && !guild) "Stats" else if (guild) "Guild" else s"$game stats"
-    val rank = try {
-      Utils.getRank(player)
-
-    } catch {
+    val rank = try Utils.getRank(player)
+    catch {
       case e: Exception => e.printStackTrace(); ""
     }
 
