@@ -21,22 +21,22 @@ class StatsCommand extends CommandBase {
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
     val thread = new Thread(new Runnable {
       override def run(): Unit = {
-        if (!SimpleStats.validKey) {
-          Utils.error("Invalid API key. Set key using /setkey [KEY]", prefix = true)
-          return
-        }
-
         if (args.isEmpty) {
           Utils.error(s"/stats [player] [game]", prefix = true)
           return
         }
 
-        val api = new HypixelAPI(UUID.fromString(SimpleStats.apiKey))
-        val stat = new Stats(api, args(0))
+        if (!SimpleStats.validity) {
+          Utils.error("Invalid Hypixel API key. Use /setkey <key>", prefix = true)
+          return
+        }
 
+        val api = new HypixelAPI(UUID.fromString(SimpleStats.key))
+        val stat = new Stats(api, args(0))
         val playerReply: PlayerReply = stat.reply
+
         if (!playerReply.isSuccess) {
-          Utils.error(s"Unexpected Error: ${playerReply.getCause}", prefix = true)
+          Utils.error(s"Unexpected API error: ${playerReply.getCause}", prefix = true)
           api.shutdown()
           return
         }
@@ -50,7 +50,6 @@ class StatsCommand extends CommandBase {
 
         if (args.length == 1) stat.printStats()
         else stat.printStats(args(1))
-
         api.shutdown()
       }
     })

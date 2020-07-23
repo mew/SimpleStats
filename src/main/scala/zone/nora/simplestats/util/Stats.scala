@@ -24,7 +24,7 @@ class Stats(api: HypixelAPI, name: String) {
   // Player reply from Hypixel API
   val reply: PlayerReply = api.getPlayerByName(name).get()
 
-  // Player reply from Hypixel API as a JSON object.
+  // Player JSON object from Hypixel API
   val player: JsonObject = reply.getPlayer
 
   // This is what contains the messages to be printed to the console.

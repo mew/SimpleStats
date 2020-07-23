@@ -2,6 +2,7 @@ package zone.nora.simplestats
 
 import java.io.File
 
+import com.google.gson.JsonParser
 import net.minecraftforge.client.ClientCommandHandler
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.fml.common.Mod
@@ -15,27 +16,25 @@ import zone.nora.simplestats.util.Utils
 @Mod(modid = "SimpleStats", name = "SimpleStats", version = SimpleStats.VERSION, modLanguage = "scala")
 object SimpleStats {
 
-  final val VERSION = "1.2"
-  var apiKey = ""
-  var validKey = false
+  final val VERSION = "1.2" // Current version of SimpleStats
+  var key = "" // Hypixel API key
+  var validity = false // Is the key valid
 
   @EventHandler
   def init(e: FMLInitializationEvent): Unit = {
     ClientCommandHandler.instance.registerCommand(new SetKeyCommand)
     ClientCommandHandler.instance.registerCommand(new StatsCommand)
 
-    val file = new File("config/apikey.txt")
-    if (!file.exists()) {
-      file.createNewFile()
-      return
-    }
-
-    val s = FileUtils.readFileToString(file)
     val thread = new Thread(new Runnable {
       override def run(): Unit = {
-        if (Utils.validateKey(s)) {
-          validKey = true
-          apiKey = s
+        val file = new File("config/simplestats.cfg")
+        if (file.exists()) {
+          val parser = new JsonParser().parse(FileUtils.readFileToString(file))
+          key = parser.getAsJsonObject.get("key").getAsString
+          if (Utils.validateKey(key)) {
+            println("Valid Hypixel API key found.")
+            validity = true
+          }
         }
 
         if (Utils.checkForUpdates() != VERSION) MinecraftForge.EVENT_BUS.register(new EventListener)

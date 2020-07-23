@@ -13,6 +13,7 @@ import net.minecraft.util.ChatComponentText
 import zone.nora.simplestats.SimpleStats
 
 object Utils {
+
   final val PREFIX = "\u00a79[\u00a76SS\u00a79] \u00a7f"
   private val mc = Minecraft.getMinecraft
 
