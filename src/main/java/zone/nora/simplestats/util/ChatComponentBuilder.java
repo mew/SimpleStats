@@ -13,10 +13,10 @@ import net.minecraft.util.IChatComponent;
  * @author Semx11
  */
 public class ChatComponentBuilder {
-    private final IChatComponent parent;
 
-    private String text;
-    private ChatStyle style;
+    private final IChatComponent parent;
+    private final String text;
+    private final ChatStyle style;
 
     private ChatComponentBuilder(String text) {
         this(text, null, Inheritance.SHALLOW);
