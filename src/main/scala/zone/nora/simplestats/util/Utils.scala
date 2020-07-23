@@ -52,10 +52,13 @@ object Utils {
       "yellow" -> "\u00a7e",
       "white" -> "\u00a7f"
     )
+
     val plusColour = if (player.has("rankPlusColor"))
       colourNameToCode(player.get("rankPlusColor").getAsString.toLowerCase) else "\u00a7c"
+
     val plusPlusColour = if (player.has("monthlyRankColor"))
       colourNameToCode(player.get("monthlyRankColor").getAsString.toLowerCase) else "\u00a76"
+
     playerRank match {
       case "VIP" => "\u00a7a[VIP]"
       case "VIP_PLUS" => "\u00a7a[VIP\u00a76+\u00a7a]"
@@ -73,7 +76,16 @@ object Utils {
 
   def getWarlordsClassLevel(bg: JsonObject, wlClass: String): Int = {
     val list = List(
-      "cooldown", "critchance", "critmultiplier", "energy", "health", "skill1", "skill2", "skill3", "skill4", "skill5"
+      "cooldown",
+      "critchance",
+      "critmultiplier",
+      "energy",
+      "health",
+      "skill1",
+      "skill2",
+      "skill3",
+      "skill4",
+      "skill5"
     )
     var total = 0
     list.foreach { it =>
@@ -87,18 +99,20 @@ object Utils {
 
   def parseTime(time: Long): String = try
     new SimpleDateFormat("dd/MM/yyyy").format(new Date(new Timestamp(time).getTime))
-  catch { case _: Exception => "N/A" } // Hypixel Staff can hide their stats, which causes this function to freak out.
+  catch {
+    case _: Exception => "N/A"
+  } // Hypixel Staff can hide their stats, which causes this function to freak out.
 
   def error(message: String, prefix: Boolean = false): Unit = put(s"\u00a7c$message", prefix)
 
   def put(message: String, prefix: Boolean = false): Unit =
     mc.thePlayer.addChatMessage(new ChatComponentText(s"${if (prefix) PREFIX else ""}$message"))
 
-  def breakline(): Unit = {
+  def breakLine(): Unit = {
     val dashes = new StringBuilder
     val dash = Math.floor((280 * mc.gameSettings.chatWidth + 40) / 320 * (1 / mc.gameSettings.chatScale) * 53).toInt - 3
     for (i <- 1 to dash)
-      if (i == (dash/2)) dashes.append("\u00a79[\u00a76SS\u00a79]\u00a79\u00a7m") else dashes.append("-")
+      if (i == (dash / 2)) dashes.append("\u00a79[\u00a76SS\u00a79]\u00a79\u00a7m") else dashes.append("-")
     mc.thePlayer.addChatMessage(new ChatComponentText(s"\u00a79\u00a7m$dashes"))
   }
 
@@ -112,6 +126,8 @@ object Utils {
       val response: String = serverResponse.readLine
       serverResponse.close()
       response
-    } catch { case _: Exception => SimpleStats.VERSION }
+    } catch {
+      case _: Exception => SimpleStats.VERSION
+    }
   }
 }

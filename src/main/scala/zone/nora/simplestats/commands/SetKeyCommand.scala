@@ -20,8 +20,10 @@ class SetKeyCommand extends CommandBase {
           if (key.length == 36 && Utils.validateKey(key)) {
             SimpleStats.apiKey = key
             SimpleStats.validKey = true
-            val file = new File("apikey.txt")
+
+            val file = new File("config/apikey.txt")
             if (!file.exists()) file.createNewFile()
+
             FileUtils.writeStringToFile(file, key)
             Utils.put("\u00a7aYour API Key has been set :)", prefix = true)
           } else Utils.error("This is not a valid Hypixel API Key.", prefix = true)
