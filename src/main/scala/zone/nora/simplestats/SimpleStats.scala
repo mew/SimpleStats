@@ -18,7 +18,6 @@ object SimpleStats {
 
   final val VERSION = "1.2" // Current version of SimpleStats
   var key = "" // Hypixel API key
-  var validity = false // Is the key valid
 
   @EventHandler
   def init(e: FMLInitializationEvent): Unit = {
@@ -31,10 +30,8 @@ object SimpleStats {
         if (file.exists()) {
           val parser = new JsonParser().parse(FileUtils.readFileToString(file))
           key = parser.getAsJsonObject.get("key").getAsString
-          if (Utils.validateKey(key)) {
-            println("Valid Hypixel API key found.")
-            validity = true
-          }
+          if (Utils.validateKey(key)) println("Valid Hypixel API key found.")
+          else println("Invalid Hypixel API key found at " + file.getCanonicalPath)
         }
 
         if (Utils.checkForUpdates() != VERSION) MinecraftForge.EVENT_BUS.register(new EventListener)
