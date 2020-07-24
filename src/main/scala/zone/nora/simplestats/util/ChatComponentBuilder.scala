@@ -10,6 +10,7 @@ import zone.nora.simplestats.util.ChatComponentBuilder.Inheritance.Inheritance
  * Utility class to easily build IChatComponents.
  *
  * @author Semx11
+ * @author WaningMatrix
  */
 object ChatComponentBuilder {
   def of(text: String) = new ChatComponentBuilder(text)

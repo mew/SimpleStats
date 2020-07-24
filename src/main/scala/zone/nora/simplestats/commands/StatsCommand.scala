@@ -10,6 +10,7 @@ import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.core.Stats
 import zone.nora.simplestats.util.Utils
 
+import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 
@@ -20,7 +21,7 @@ class StatsCommand extends CommandBase {
 
   override def getCommandUsage(sender: ICommandSender): String = "/stats [player]"
 
-  override def getCommandAliases: util.List[String] = util.Arrays.asList[String]("hstats", "stat")
+  override def getCommandAliases: util.List[String] = ("hstats" :: "stat" :: Nil).asJava
 
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
     val thread = new Thread(new Runnable {
@@ -28,6 +29,14 @@ class StatsCommand extends CommandBase {
         if (args.isEmpty) {
           Utils.error(s"/stats [player] [game]", prefix = true)
           return
+        }
+
+        val apiKey = try {
+          UUID.fromString(SimpleStats.key)
+        } catch {
+          case e: IllegalArgumentException =>
+            Utils.error("You haven't set your Hypixel API yet. Use /setkey <key>", true)
+            return
         }
 
         val api = new HypixelAPI(UUID.fromString(SimpleStats.key))
@@ -43,15 +52,15 @@ class StatsCommand extends CommandBase {
         if (serverMode) {
           val lines: ListBuffer[String] = new ListBuffer
           val players: util.List[String] = new util.ArrayList[String]()
-          for (playerInfo <- Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap) {
+          Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap.foreach { playerInfo =>
             // TODO This way of getting all players returns random 10 digit username sometimes.
             players.add(playerInfo.getGameProfile.getName)
           }
 
           if (players.size > 24) players.trimEnd(players.size - 24) // Limited to 24 to not get API query limited.
-          println(s"Stat check queue is $players")
+          SimpleStats.logger.info(s"Stat check queue is $players")
 
-          for (player <- players) {
+          players.foreach { player =>
             val stat = new Stats(api, player, compact = true)
             if (isRequestSuccessful(stat, silent = true)) {
               if (args.length == 1) stat.saveStats()
