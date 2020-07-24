@@ -54,7 +54,6 @@ configurations {
 
 dependencies {
     embed 'com.github.HypixelDev.PublicAPI:Java:2.0.0'
-//    embed 'com.github.ReflxctionDev:SimpleHypixelAPI:1.0.9-BETA'
 }
 
 processResources

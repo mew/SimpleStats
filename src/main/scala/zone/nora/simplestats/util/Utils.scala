@@ -18,7 +18,10 @@ object Utils {
   private val mc = Minecraft.getMinecraft
 
   def validateKey(apiKey: String): Boolean = try {
-    new HypixelAPI(UUID.fromString(apiKey)).getKey.get().isSuccess
+    val api = new HypixelAPI(UUID.fromString(apiKey))
+    val response: Boolean = api.getKey.get().isSuccess
+    api.shutdown()
+    response
   } catch {
     case _: Exception => false
   }
@@ -73,6 +76,28 @@ object Utils {
       case null => "\u00a77"
       case _ => "\u00a77"
     }
+  }
+
+  def getGuildLevel(experience: Long): Double = {
+    var exp = experience
+    val exps = List(
+      100000, 150000, 250000, 500000, 750000, 1000000, 1250000,
+      1500000, 2000000, 2500000, 2500000, 2500000, 500000, 2500000
+    )
+
+    var c = 0.0
+    exps.foreach { it =>
+      if (it > exp) c + Utils.roundDouble(it / exp)
+      exp -= it
+      c += 1
+    }
+
+    val increment = 3000000
+    while (exp > increment) {
+      c += 1
+      exp -= increment
+    }
+    c.+(Utils.roundDouble(exp / increment))
   }
 
   def getWarlordsClassLevel(bg: JsonObject, wlClass: String): Int = {

@@ -20,7 +20,7 @@ class EventListener {
           ChatComponentBuilder.of("\u00a76>> \u00a79Click Here \u00a76<<")
             .setHoverEvent("\u00a79Click!")
             .setClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mew/SimpleStats/releases/latest/")
-            .build()
+            .build
         )
 
         Utils.breakLine()

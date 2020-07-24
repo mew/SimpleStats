@@ -6,10 +6,14 @@ import java.util.UUID
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
 import net.minecraft.command.{CommandBase, ICommandSender}
-import net.minecraft.entity.player.EntityPlayer
 import zone.nora.simplestats.SimpleStats
-import zone.nora.simplestats.util.{Stats, Utils}
+import zone.nora.simplestats.core.Stats
+import zone.nora.simplestats.util.Utils
 
+import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
+
+//noinspection DuplicatedCode
 class StatsCommand extends CommandBase {
 
   override def getCommandName: String = "stats"
@@ -29,6 +33,7 @@ class StatsCommand extends CommandBase {
         val api = new HypixelAPI(UUID.fromString(SimpleStats.key))
         if (!api.getKey.get().isSuccess) {
           Utils.error("Invalid Hypixel API key. Use /setkey <key>", prefix = true)
+          api.shutdown()
           return
         }
 
@@ -36,23 +41,44 @@ class StatsCommand extends CommandBase {
         val serverMode = args(0).charAt(0).equals('*') // Prints stats of everyone on the server in compact mode.
 
         if (serverMode) {
-          val playerEntities: util.List[EntityPlayer] = Minecraft.getMinecraft.theWorld.playerEntities
-          var i = 0
-          for (w <- 0 to playerEntities.size()) { // can use foreach here
-            Thread.sleep(250)
-            val name = playerEntities.get(w).getName
-            val stat = new Stats(api, name, oneLine = true)
-
-            if (isRequestSuccessful(stat)) {
-              if (args.length == 1) stat.printStats()
-              else stat.printStats(args(1))
-            }
+          val lines: ListBuffer[String] = new ListBuffer
+          val players: util.List[String] = new util.ArrayList[String]()
+          for (playerInfo <- Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap) {
+            // TODO This way of getting all players returns random 10 digit username sometimes.
+            players.add(playerInfo.getGameProfile.getName)
           }
+
+          if (players.size > 24) players.trimEnd(players.size - 24) // Limited to 24 to not get API query limited.
+          println(s"Stat check queue is $players")
+
+          for (player <- players) {
+            val stat = new Stats(api, player, compact = true)
+            if (isRequestSuccessful(stat, silent = true)) {
+              if (args.length == 1) stat.saveStats()
+              else stat.saveStats(args(1))
+            }
+
+            lines.append(stat.getStatsInOneLine)
+          }
+
+          Utils.breakLine()
+          lines.foreach { it => if (!it.isEmpty) Utils.put(it) }
+          Utils.breakLine()
         } else {
-          val stat = new Stats(api, args(0).replace(":", ""), oneLine = compactMode)
+          val name = args(0).charAt(0) match {
+            case ':' =>
+              args(0).replaceAll(":", "")
+            case '.' =>
+              Minecraft.getMinecraft.thePlayer.getName
+            case _ =>
+              args(0)
+          }
+
+          val stat = new Stats(api, name, compact = compactMode)
           if (isRequestSuccessful(stat)) {
-            if (args.length == 1) stat.printStats()
-            else stat.printStats(args(1))
+            if (args.length == 1) stat.saveStats()
+            else stat.saveStats(args(1))
+            stat.printStats()
           }
         }
 
@@ -62,12 +88,12 @@ class StatsCommand extends CommandBase {
     thread.start()
   }
 
-  private def isRequestSuccessful(stat: Stats): Boolean = {
+  private def isRequestSuccessful(stat: Stats, silent: Boolean = false): Boolean = {
     if (!stat.reply.isSuccess) {
-      Utils.error(s"Unexpected API error: ${stat.reply.getCause}", prefix = true)
+      if (!silent) Utils.error(s"Unexpected API error: ${stat.reply.getCause}", prefix = true)
       return false
     } else if (stat.player == null) {
-      Utils.error("Invalid player.", prefix = true)
+      if (!silent) Utils.error("Invalid player.", prefix = true)
       return false
     }
 
