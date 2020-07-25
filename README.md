@@ -17,3 +17,10 @@ As of 1.1, you can get stats for a player's guild too (`/stats [player] guild`):
 1. Download from the [releases page](https://github.com/mew/SimpleStats/releases)
 2. Put jar into your mods folder
 3. When in game, set your Hypixel API key with /setkey
+
+
+## Credits
+Developers: Zunora, WaningMatrix and Befall<br/>
+Special thanks to LEGENDFF and littlemissmadivirus
+
+![GitHub total downloads](https://img.shields.io/github/downloads/mew/simplestats/total)

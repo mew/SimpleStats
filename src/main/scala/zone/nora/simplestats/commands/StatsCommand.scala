@@ -2,6 +2,7 @@ package zone.nora.simplestats.commands
 
 import java.util
 import java.util.UUID
+import java.util.concurrent.{ExecutorService, Executors}
 
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
@@ -10,12 +11,14 @@ import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.core.Stats
 import zone.nora.simplestats.util.Utils
 
-import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 //noinspection DuplicatedCode
 class StatsCommand extends CommandBase {
+
+  private final val SERVICE: ExecutorService = Executors.newSingleThreadExecutor()
 
   override def getCommandName: String = "stats"
 
@@ -24,7 +27,7 @@ class StatsCommand extends CommandBase {
   override def getCommandAliases: util.List[String] = ("hstats" :: "stat" :: Nil).asJava
 
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
-    val thread = new Thread(new Runnable {
+    SERVICE.submit(new Runnable {
       override def run(): Unit = {
         if (args.isEmpty) {
           Utils.error(s"/stats [player] [game]", prefix = true)
@@ -35,13 +38,20 @@ class StatsCommand extends CommandBase {
           UUID.fromString(SimpleStats.key)
         } catch {
           case e: IllegalArgumentException =>
-            Utils.error("You haven't set your Hypixel API yet. Use /setkey <key>", true)
+            Utils.error("You haven't set your Hypixel API yet. Use /setkey <key>", prefix = true)
+            SimpleStats.logger.error(e.printStackTrace())
             return
         }
 
-        val api = new HypixelAPI(UUID.fromString(SimpleStats.key))
+        val api = new HypixelAPI(apiKey)
         if (!api.getKey.get().isSuccess) {
           Utils.error("Invalid Hypixel API key. Use /setkey <key>", prefix = true)
+          api.shutdown()
+          return
+        }
+
+        if (api.getKey.get().getRecord.getQueriesInPastMin > 120) {
+          Utils.error("API query limit exceeded. Please try again in a minute.", prefix = true)
           api.shutdown()
           return
         }
@@ -94,7 +104,6 @@ class StatsCommand extends CommandBase {
         api.shutdown()
       }
     })
-    thread.start()
   }
 
   private def isRequestSuccessful(stat: Stats, silent: Boolean = false): Boolean = {
