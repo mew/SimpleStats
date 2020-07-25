@@ -90,6 +90,8 @@ shadowJar {
     exclude("mozilla/**")
     exclude("dummyThing")
     exclude("META-INF/**")
+
+    classifier ''
 }
 
 jar {
