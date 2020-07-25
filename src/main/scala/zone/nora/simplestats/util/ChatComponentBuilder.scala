@@ -68,5 +68,3 @@ class ChatComponentBuilder(text: String, val parent: IChatComponent, val inherit
     else thisComponent
   }
 }
-
-

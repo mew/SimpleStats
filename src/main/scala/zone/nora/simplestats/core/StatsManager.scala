@@ -28,7 +28,7 @@ class StatsManager(resp: JsonObject, game: String) {
    * Use this when you expect a Int response.
    *
    * @param name The name of the JSON key.
-   * @param one Return one if response is zero. useful for handling arithmetic exceptions.
+   * @param one Return one if response is zero. Useful for handling arithmetic exceptions.
    * @return An actual integer or 0 if null.
    */
   def getStatsAsInt(name: String, one: Boolean = false): Int = try {
