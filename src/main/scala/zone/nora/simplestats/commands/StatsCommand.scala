@@ -7,6 +7,8 @@ import java.util.concurrent.{ExecutorService, Executors}
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
 import net.minecraft.command.{CommandBase, ICommandSender}
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.BlockPos
 import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.core.Stats
 import zone.nora.simplestats.util.Utils
@@ -15,7 +17,6 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
-//noinspection DuplicatedCode
 class StatsCommand extends CommandBase {
 
   private final val SERVICE: ExecutorService = Executors.newSingleThreadExecutor()
@@ -116,6 +117,15 @@ class StatsCommand extends CommandBase {
     }
 
     true
+  }
+
+  override def addTabCompletionOptions(sender: ICommandSender, args: Array[String], pos: BlockPos): util.List[String] = {
+    val playerList: util.List[String] = new util.ArrayList[String]()
+    for (player: EntityPlayer <- Minecraft.getMinecraft.theWorld.playerEntities) {
+      playerList.add(player.getName)
+    }
+
+    playerList
   }
 
   override def canCommandSenderUseCommand(sender: ICommandSender): Boolean = true
