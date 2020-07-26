@@ -3,7 +3,7 @@
   "modid": "SimpleStats",
   "name": "SimpleStats",
   "description": "An extremely simple Hypixel stats mod without any BS.",
-  "version": "1.2",
+  "version": "1.3",
   "mcversion": "${mcversion}",
   "url": "https://github.com/mew/simplestats",
   "updateUrl": "",
