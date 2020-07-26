@@ -7,7 +7,6 @@ import java.util.concurrent.{ExecutorService, Executors}
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
 import net.minecraft.command.{CommandBase, ICommandSender}
-import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.BlockPos
 import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.core.Stats
@@ -15,6 +14,7 @@ import zone.nora.simplestats.util.Utils
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 
 //noinspection DuplicatedCode
 class StatsCommand extends CommandBase {
@@ -70,6 +70,8 @@ class StatsCommand extends CommandBase {
           if (players.size > 24) players.trimEnd(players.size - 24) // Limited to 24 to not get API query limited.
           SimpleStats.logger.info(s"Stat check queue is $players")
 
+          val listBuffer: ListBuffer[String] = new ListBuffer[String]
+
           // Changed from foreach as return wont work in a for each loop.
           for (player <- players) {
             val stat = new Stats(api, player, compact = true)
@@ -83,9 +85,12 @@ class StatsCommand extends CommandBase {
               if (args.length == 1) stat.saveStats()
               else stat.saveStats(args(1))
 
-              stat.printStats()
+              if (stat.getStatsInOneLine.isEmpty) Utils.error(s"Error during getting statistics of $player")
+              else listBuffer.add(stat.getStatsInOneLine)
             }
           }
+
+          listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it, prefix = true) }
         } else {
           val name = args(0).charAt(0) match {
             case ':' =>
@@ -128,14 +133,15 @@ class StatsCommand extends CommandBase {
     }
   }
 
-  // TODO Tab completion starts from beginning instead of getting filtered when tabbing after a letter.
   override def addTabCompletionOptions(sender: ICommandSender, args: Array[String], pos: BlockPos): util.List[String] = {
-    val playerList: util.List[String] = new util.ArrayList[String]()
-    for (player: EntityPlayer <- Minecraft.getMinecraft.theWorld.playerEntities) {
-      playerList.add(player.getName)
+    val tabList: util.List[String] = new util.ArrayList[String]
+    val entry: String = if (args(0) == null) "" else args(0).toLowerCase
+
+    for (player <- Minecraft.getMinecraft.theWorld.playerEntities) {
+      if (args(0) != null && player.getName.toLowerCase.startsWith(entry)) tabList.add(player.getName)
     }
 
-    playerList
+    tabList
   }
 
   override def canCommandSenderUseCommand(sender: ICommandSender): Boolean = true
