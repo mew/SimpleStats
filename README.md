@@ -6,7 +6,9 @@ Replaces the default /stats command with a much more informative text-based vers
 You can also get stats for a specific game (`/stats [player] [game]`):  
 ![Stats Image 2](https://i.imgur.com/6mY49nO.png)  
 As of 1.1, you can get stats for a player's guild too (`/stats [player] guild`):  
-![Stats Image 3](https://i.imgur.com/1h2w3rA.png)
+![Stats Image 3](https://i.imgur.com/1h2w3rA.png)  
+As of 1.3, you can get stats for everyone in your lobby (`/stats * [game]`):
+![Stats Image 4](https://i.imgur.com/foybXXy.png)
 
 ## Shortcuts
 - Use `:` before a name to get stats compactly in one line. (`/stats :[player] <game/guild>`)
@@ -18,9 +20,6 @@ As of 1.1, you can get stats for a player's guild too (`/stats [player] guild`):
 2. Put jar into your mods folder
 3. When in game, set your Hypixel API key with /setkey
 
-
 ## Credits
-Developers: Zunora, WaningMatrix and Befall<br/>
+Developers: Zunora, WaningMatrix and Befall  
 Special thanks to LEGENDFF and littlemissmadivirus
-
-![GitHub total downloads](https://img.shields.io/github/downloads/mew/simplestats/total)
