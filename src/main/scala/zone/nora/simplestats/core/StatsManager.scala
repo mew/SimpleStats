@@ -1,6 +1,7 @@
 package zone.nora.simplestats.core
 
 import com.google.gson.JsonObject
+import zone.nora.simplestats.util.Utils
 
 /**
  * Manages game stats values without running into stupid null pointers.
@@ -16,6 +17,7 @@ class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
     else resp.get("stats").getAsJsonObject.get(game).getAsJsonObject.get(subkey).getAsJsonObject
   } catch {
     case _:Exception =>
+      Utils.error(s"No stats available for $game", prefix = true)
       null
   }
 
@@ -25,6 +27,8 @@ class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
     case _:Exception =>
       null
   }
+
+  def has(member: String): Boolean = stats.has(member)
 
   /**
    * Use this when you expect a Int response.

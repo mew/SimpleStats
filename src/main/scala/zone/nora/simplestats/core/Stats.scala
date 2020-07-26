@@ -48,7 +48,8 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
    */
   def getStatsInOneLine: String = {
     val str = new StringBuilder
-    lines.foreach { it => str.append(it).append("\u00a7f").append(" ") }
+    //lines.foreach { it => str.append(it).append("\u00a7f").append(" ") }
+    lines.indices.foreach { it => str.append(s"${lines(it)}\u00a7f ${if (it != lines.size - 1 && it != 0) "| " else ""}") }
     str.toString()
   }
 
@@ -75,7 +76,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
       saveStatsToBuffer("Discord", try {
         player.get("socialMedia").getAsJsonObject.get("links").getAsJsonObject.get("DISCORD").getAsString
       } catch {
-        case _: NullPointerException => "Not defined"
+        case _: NullPointerException => "\u00a7cN/A"
       })
       saveStatsToBuffer("Karma", player.get("karma"))
       saveStatsToBuffer("Online", try {
@@ -88,7 +89,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
       saveStatsToBuffer("Last Login", try {
         Utils.parseTime(player.get("lastLogin").getAsLong)
       } catch {
-        case _: NullPointerException => "Hidden"
+        case _: NullPointerException => "\u00a7cHidden"
       })
     }
   }
@@ -131,7 +132,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
     }
 
     val statColour = s"\u00a7${f(value)}"
-    val done = y(value.toString)
+    val done = try { y(value.toString) } catch { case _ => value.toString }
     lines.append(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$done"}")
   }
 
@@ -170,7 +171,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
 
     if (!player.has("stats")) {
       firstLine(player)
-      lines.append("No stats found.")
+      lines.append("\u00a7cThis player has hidden their stats.")
       return
     }
 
@@ -229,8 +230,8 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Wins", bg.getStatsAsInt("wins"))
           saveStatsToBuffer("Losses", bg.getStatsAsInt("losses"))
           saveStatsToBuffer("Winstreak", bg.getStatsAsInt("win_streak"))
-          saveStatsToBuffer("Damage dealt", bg.getStatsAsInt("damage"))
-          saveStatsToBuffer("Damage taken", bg.getStatsAsInt("damage_taken"))
+          saveStatsToBuffer("Damage dealt", bg.getStatsAsLong("damage"))
+          saveStatsToBuffer("Damage taken", bg.getStatsAsLong("damage_taken"))
           saveStatsToBuffer("Coins", bg.getStatsAsInt("coins"))
           saveStatsToBuffer("Mage Level", Utils.getWarlordsClassLevel(bg.stats, "mage"))
           saveStatsToBuffer("Paladin Level", Utils.getWarlordsClassLevel(bg.stats, "paladin"))
@@ -245,7 +246,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         }
         firstLine(player, "BedWars")
         if (bw.achievements != null)
-          saveStatsToBuffer("Level", bw.achievements.get("bedwars_level").getAsInt)
+          saveStatsToBuffer("Level", s"${bw.achievements.get("bedwars_level").getAsInt}\u272b")
 
         val wlr = Utils.roundDouble(bw.getStatsAsDouble("wins_bedwars") / bw.getStatsAsInt("losses_bedwars", one = true))
         val fkdr = Utils.roundDouble(bw.getStatsAsDouble("final_kills_bedwars") / bw.getStatsAsInt("final_deaths_bedwars", one = true))
@@ -391,13 +392,14 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Shots Fired", pb.getStatsAsInt("shots_fired"))
           saveStatsToBuffer("Coins", pb.getStatsAsInt("coins"))
         }
-      case "p" | "pit" =>
+      case "p" | "pit" | "thepit" =>
         val pit = new StatsManager(player, "Pit", subkey = "pit_stats_ptl")
-        if (pit.stats == null) {
+        val pit_ = new StatsManager(player, "Pit", "profile")
+        if (pit.stats == null || pit_.stats == null) {
           api.shutdown()
           return
         }
-        firstLine(player)
+        firstLine(player, "The Pit")
         val kdr = pit.getStatsAsDouble("kills") / pit.getStatsAsInt("deaths")
         val kadr = (pit.getStatsAsDouble("kills") + pit.getStatsAsDouble("assists")) / pit.getStatsAsInt("deaths")
         if (compact) {
@@ -407,11 +409,18 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Kills", pit.getStatsAsInt("kills"))
           saveStatsToBuffer("Assists", pit.getStatsAsInt("assists"))
           saveStatsToBuffer("Deaths", pit.getStatsAsInt("deaths"))
+          saveStatsToBuffer("Gold", pit_.getStatsAsDouble("cash"))
+          saveStatsToBuffer("Renown", pit_.getStatsAsInt("renown"))
+          saveStatsToBuffer("Highest killstreak", pit.getStatsAsInt("max_streak"))
           saveStatsToBuffer("KDR", kdr)
-          saveStatsToBuffer("(K+A)DR", kadr)
           saveStatsToBuffer("Damage dealt", pit.getStatsAsInt("damage_dealt"))
           saveStatsToBuffer("Damage taken", pit.getStatsAsInt("damage_received"))
-          saveStatsToBuffer("Highest killstreak", pit.getStatsAsInt("max_streak"))
+          if (pit_.has("genesis_allegiance")) {
+            val s = pit_.getStatsAsString("genesis_allegiance")
+            saveStatsToBuffer("Genesis Allegiance", if (s == "ANGEL") "\u00a7bAngel" else "\u00a7cDemon")
+          }
+          saveStatsToBuffer("Prestige", if (pit_.has("prestiges")) pit_.stats.getAsJsonArray("prestiges").size() else 0)
+          saveStatsToBuffer("Pit Supporter", new StatsManager(player, "Pit").has("packages"))
         }
       case "q" | "quake" | "quakecraft" =>
         val q = new StatsManager(player, "Quake")
@@ -440,13 +449,17 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         }
 
         firstLine(player, "SkyWars")
-        val swLevel = try { // https://hypixel.net/posts/19293045
-          val swExp = sw.getStatsAsDouble("skywars_experience")
-          val exps = 0 :: 20 :: 70 :: 150 :: 250 :: 500 :: 1000 :: 2000 :: 3500 :: 6000 :: 10000 :: 15000 :: Nil
-          if (swExp >= 1500) (swExp - 15000) / 10000 + 12
-          else for (i <- exps.indices) if (swExp < exps(i)) 1 + i + (swExp - exps(i - 1)) / (exps(i) - exps(i - 1))
-        } catch {
-          case e: Exception => e.printStackTrace(); 0
+        val swLevel = if (sw.has("levelFormatted")) {
+          sw.stats.get("levelFormatted").getAsString
+        } else {
+          try { // https://hypixel.net/posts/19293045
+            val swExp = sw.getStatsAsDouble("skywars_experience")
+            val exps = 0 :: 20 :: 70 :: 150 :: 250 :: 500 :: 1000 :: 2000 :: 3500 :: 6000 :: 10000 :: 15000 :: Nil
+            if (swExp >= 1500) (swExp - 15000) / 10000 + 12
+            else for (i <- exps.indices) if (swExp < exps(i)) 1 + i + (swExp - exps(i - 1)) / (exps(i) - exps(i - 1))
+          } catch {
+            case e: Exception => e.printStackTrace(); 0
+          }
         }
 
         val swlr = Utils.roundDouble(sw.getStatsAsDouble("wins_solo") / sw.getStatsAsInt("losses_solo", one = true))
@@ -525,7 +538,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Wins", sh.getStatsAsInt("wins"))
           saveStatsToBuffer("Deaths", sh.getStatsAsInt("deaths"))
           saveStatsToBuffer("Coins", sh.getStatsAsInt("coins"))
-          saveStatsToBuffer("Smash Level", sh.getStatsAsInt("smashLevel"))
+          saveStatsToBuffer("Smash Level", s"${sh.getStatsAsInt("smashLevel")}\u272b")
           val activeClass = sh.getStatsAsString("active_class")
           val prestige = if (sh.stats.has(s"pg_$activeClass")) sh.getStatsAsInt(s"pg_$activeClass") else 0
           val level = if (sh.stats.has(s"lastLevel_$activeClass")) sh.getStatsAsInt(s"lastLevel_$activeClass") else 0
@@ -671,7 +684,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         }
         val guild = guildReply.getGuild
         if (guild == null) {
-          Utils.error(s"${player.get("displayname").getAsString} is not in a guild.")
+          Utils.error(s"${player.get("displayname").getAsString} is not in a guild.", true)
           api.shutdown()
           return
         }
@@ -684,13 +697,15 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Members", s"${guild.getMembers.size}/125")
         }
       case _ =>
+        Utils.breakLine()
         Utils.error(s"$game is not a valid game.")
         Utils.error("Try one of these:")
         List(
           "arcade", "arenabrawl", "warlords", "bedwars", "duels", "tkr", "blitz", "legacy", "cvc", "paintball",
           "quake", "skywars", "skyclash", "speeduhc", "smash", "tnt", "crazywalls", "uhc", "vampirez", "walls",
-          "megawalls", "murdermystery", "guild"
+          "megawalls", "murdermystery", "pit", "guild"
         ).foreach { it => Utils.put(s"\u00a78- \u00a7a$it") }
+        Utils.breakLine()
     }
   }
 }
