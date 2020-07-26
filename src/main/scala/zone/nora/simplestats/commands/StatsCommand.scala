@@ -7,7 +7,6 @@ import java.util.concurrent.{ExecutorService, Executors}
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
 import net.minecraft.command.{CommandBase, ICommandSender}
-import net.minecraft.util.BlockPos
 import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.core.Stats
 import zone.nora.simplestats.util.Utils
@@ -16,7 +15,6 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
-//noinspection DuplicatedCode
 class StatsCommand extends CommandBase {
 
   private final val SERVICE: ExecutorService = Executors.newSingleThreadExecutor()
@@ -28,7 +26,7 @@ class StatsCommand extends CommandBase {
   override def getCommandAliases: util.List[String] = ("hstats" :: "stat" :: Nil).asJava
 
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
-    SERVICE.submit(new Runnable {
+    SERVICE.execute(new Runnable {
       override def run(): Unit = {
         if (args.isEmpty) {
           Utils.error(s"/stats [player] [game]", prefix = true)
@@ -90,6 +88,7 @@ class StatsCommand extends CommandBase {
             }
           }
 
+          Utils.breakLine()
           listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it, prefix = true) }
         } else {
           val name = args(0).charAt(0) match {
@@ -131,17 +130,6 @@ class StatsCommand extends CommandBase {
       Utils.error(s"Unexpected API error: ${stat.reply.getCause}", prefix = true)
       false
     }
-  }
-
-  override def addTabCompletionOptions(sender: ICommandSender, args: Array[String], pos: BlockPos): util.List[String] = {
-    val tabList: util.List[String] = new util.ArrayList[String]
-    val entry: String = if (args(0) == null) "" else args(0).toLowerCase
-
-    for (player <- Minecraft.getMinecraft.theWorld.playerEntities) {
-      if (args(0) != null && player.getName.toLowerCase.startsWith(entry)) tabList.add(player.getName)
-    }
-
-    tabList
   }
 
   override def canCommandSenderUseCommand(sender: ICommandSender): Boolean = true

@@ -417,6 +417,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           api.shutdown()
           return
         }
+
         firstLine(player, "SkyWars")
         val swLevel = try { // https://hypixel.net/posts/19293045
           val swExp = sw.getStatsAsDouble("skywars_experience")
@@ -424,7 +425,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           if (swExp >= 1500) (swExp - 15000) / 10000 + 12
           else for (i <- exps.indices) if (swExp < exps(i)) 1 + i + (swExp - exps(i - 1)) / (exps(i) - exps(i - 1))
         } catch {
-          case e: Exception => e.printStackTrace(); ""
+          case e: Exception => e.printStackTrace(); 0
         }
 
         val swlr = Utils.roundDouble(sw.getStatsAsDouble("wins_solo") / sw.getStatsAsInt("losses_solo", one = true))
@@ -445,6 +446,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Wins", sw.getStatsAsInt("wins"))
           saveStatsToBuffer("Losses", sw.getStatsAsInt("losses"))
           saveStatsToBuffer("Overall WLR", owlr)
+          saveStatsToBuffer("Winstreak", sw.getStatsAsInt("win_streak"))
           saveStatsToBuffer("Coins", sw.getStatsAsInt("coins"))
           saveStatsToBuffer("Souls", sw.getStatsAsInt("souls"))
           saveStatsToBuffer("Heads", sw.getStatsAsInt("heads"))
