@@ -21,7 +21,7 @@ class StatsCommand extends CommandBase {
 
   override def getCommandName: String = "stats"
 
-  override def getCommandUsage(sender: ICommandSender): String = "/stats [player]"
+  override def getCommandUsage(sender: ICommandSender): String = "/stats [player] [game]"
 
   override def getCommandAliases: util.List[String] = ("hstats" :: Nil).asJava
 
@@ -49,8 +49,19 @@ class StatsCommand extends CommandBase {
           return
         }
 
+        // Prints API key statistics
+        val keyStats = api.getKey.get().getRecord
+        if (args(0).equals("#")) {
+          Utils.breakLine()
+          Utils.put(s"Total queries: ${keyStats.getTotalQueries}", prefix = true)
+          Utils.put(s"Queries in last minute: ${keyStats.getQueriesInPastMin}", prefix = true)
+          Utils.breakLine()
+          api.shutdown()
+          return
+        }
+
         // The actual query limit is 120 q/min but this is capped at 100 to be on the safe side.
-        if (api.getKey.get().getRecord.getQueriesInPastMin > 100) {
+        if (keyStats.getQueriesInPastMin > 100) {
           Utils.error("API query limit exceeded. Please try again in a minute.", prefix = true)
           api.shutdown()
           return
@@ -66,7 +77,7 @@ class StatsCommand extends CommandBase {
           }
 
           if (players.size > 24) players.trimEnd(players.size - 24) // Limited to 24 to not get API query limited.
-          SimpleStats.logger.info(s"Stat check queue is $players")
+          SimpleStats.logger.info(s"Stats check queue is $players")
 
           val listBuffer: ListBuffer[String] = new ListBuffer[String]
 
@@ -88,8 +99,11 @@ class StatsCommand extends CommandBase {
             }
           }
 
-          Utils.breakLine()
-          listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it, prefix = true) }
+          if (listBuffer.nonEmpty) {
+            Utils.breakLine()
+            listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it, prefix = true) }
+            Utils.breakLine()
+          }
         } else {
           val name = args(0).charAt(0) match {
             case ':' =>

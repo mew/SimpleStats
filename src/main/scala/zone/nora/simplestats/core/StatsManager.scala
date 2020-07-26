@@ -7,11 +7,13 @@ import com.google.gson.JsonObject
  *
  * @param resp Player response JSON object.
  * @param game The name of the game.
+ * @param subkey Makes stats property return a sub property of a game stats property
  */
-class StatsManager(resp: JsonObject, game: String) {
+class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
 
   val stats: JsonObject = try {
-    resp.get("stats").getAsJsonObject.get(game).getAsJsonObject
+    if (subkey == null) resp.get("stats").getAsJsonObject.get(game).getAsJsonObject
+    else resp.get("stats").getAsJsonObject.get(game).getAsJsonObject.get(subkey).getAsJsonObject
   } catch {
     case _:Exception =>
       null

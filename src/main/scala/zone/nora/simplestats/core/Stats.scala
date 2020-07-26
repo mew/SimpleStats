@@ -36,7 +36,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
   def printStats(): Unit = {
     if (compact) { // Compact mode
       Utils.put(getStatsInOneLine, prefix = true)
-    } else { // Detailed mode
+    } else if (lines.nonEmpty) { // Detailed mode
       Utils.breakLine()
       lines.foreach { it => Utils.put(it) }
       Utils.breakLine()
@@ -65,26 +65,24 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
       return
     }
 
-    saveStatsToBuffer("HyLevel", try {
+    saveStatsToBuffer("Hypixel Level", try {
       ILeveling.getLevel(player.get("networkExp").getAsDouble).toInt
     } catch {
       case _: NullPointerException => 1
     })
     saveStatsToBuffer("AP", player.get("achievementPoints"))
-    saveStatsToBuffer("Online", try {
-      player.get("lastLogin").getAsLong > player.get("lastLogout").getAsLong
-    } catch {
-      case _: NullPointerException => false
-    })
-
-    if (!compact) { // Add stuff you only want to be included in detailed mode
+    if (!compact) { // Only included in detailed mode
       saveStatsToBuffer("Discord", try {
         player.get("socialMedia").getAsJsonObject.get("links").getAsJsonObject.get("DISCORD").getAsString
       } catch {
         case _: NullPointerException => "Not defined"
       })
-
       saveStatsToBuffer("Karma", player.get("karma"))
+      saveStatsToBuffer("Online", try {
+        player.get("lastLogin").getAsLong > player.get("lastLogout").getAsLong
+      } catch {
+        case _: NullPointerException => false
+      })
       saveStatsToBuffer("First Login", // https://steveridout.github.io/mongo-object-time/
         Utils.parseTime(new BigInteger(player.get("_id").getAsString.substring(0, 8), 16).longValue * 1000))
       saveStatsToBuffer("Last Login", try {
@@ -192,19 +190,21 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           return
         }
         firstLine(player, "Arena Brawl")
+        val wins = arena.getStatsAsInt("wins_1v1") + arena.getStatsAsInt("wins_2v2") + arena.getStatsAsInt("wins_4v4")
+        val losses = arena.getStatsAsInt("losses_1v1") + arena.getStatsAsInt("losses_2v2") + arena.getStatsAsInt("losses_4v4")
 
         if (compact) {
-          val wins = arena.getStatsAsInt("wins_1v1") + arena.getStatsAsInt("wins_2v2") + arena.getStatsAsInt("wins_4v4")
-          val losses = arena.getStatsAsInt("losses_1v1") + arena.getStatsAsInt("losses_2v2") + arena.getStatsAsInt("losses_4v4")
-          saveStatsToBuffer("W", wins)
-          saveStatsToBuffer("L", losses)
+          saveStatsToBuffer("Wins", wins)
+          saveStatsToBuffer("Losses", losses)
         } else {
           saveStatsToBuffer("1v1 Wins", arena.getStatsAsInt("wins_1v1"))
           saveStatsToBuffer("2v2 Wins", arena.getStatsAsInt("wins_2v2"))
           saveStatsToBuffer("4v4 Wins", arena.getStatsAsInt("wins_4v4"))
+          saveStatsToBuffer("Total wins", wins)
           saveStatsToBuffer("1v1 Losses", arena.getStatsAsInt("losses_1v1"))
           saveStatsToBuffer("2v2 Losses", arena.getStatsAsInt("losses_2v2"))
           saveStatsToBuffer("4v4 Losses", arena.getStatsAsInt("losses_4v4"))
+          saveStatsToBuffer("Total losses", losses)
           saveStatsToBuffer("Coins", arena.getStatsAsInt("coins"))
           saveStatsToBuffer("Offensive Skill", arena.getStatsAsString("offensive").replace("_", " "))
           saveStatsToBuffer("Utility Skill", arena.getStatsAsString("utility").replace("_", " "))
@@ -220,7 +220,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         firstLine(player, "Warlords")
         if (compact) {
           saveStatsToBuffer("KDR", Utils.roundDouble(bg.getStatsAsDouble("kills") / bg.getStatsAsInt("deaths", one = true)))
-          saveStatsToBuffer("(K+A)DR", Utils.roundDouble(bg.getStatsAsDouble("kills") + bg.getStatsAsDouble("assists") / bg.getStatsAsInt("deaths", one = true)))
+          saveStatsToBuffer("(K+A)DR", Utils.roundDouble((bg.getStatsAsDouble("kills") + bg.getStatsAsDouble("assists")) / bg.getStatsAsInt("deaths", one = true)))
           saveStatsToBuffer("WS", bg.getStatsAsInt("win_streak"))
         } else {
           saveStatsToBuffer("Kills", bg.getStatsAsInt("kills"))
@@ -391,7 +391,28 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Shots Fired", pb.getStatsAsInt("shots_fired"))
           saveStatsToBuffer("Coins", pb.getStatsAsInt("coins"))
         }
-      case "pit" => Utils.error("Stats lookup for The Pit is coming soon (tm)")
+      case "p" | "pit" =>
+        val pit = new StatsManager(player, "Pit", subkey = "pit_stats_ptl")
+        if (pit.stats == null) {
+          api.shutdown()
+          return
+        }
+        firstLine(player)
+        val kdr = pit.getStatsAsDouble("kills") / pit.getStatsAsInt("deaths")
+        val kadr = (pit.getStatsAsDouble("kills") + pit.getStatsAsDouble("assists")) / pit.getStatsAsInt("deaths")
+        if (compact) {
+          saveStatsToBuffer("KDR", kdr)
+          saveStatsToBuffer("(K+A)DR", kadr)
+        } else {
+          saveStatsToBuffer("Kills", pit.getStatsAsInt("kills"))
+          saveStatsToBuffer("Assists", pit.getStatsAsInt("assists"))
+          saveStatsToBuffer("Deaths", pit.getStatsAsInt("deaths"))
+          saveStatsToBuffer("KDR", kdr)
+          saveStatsToBuffer("(K+A)DR", kadr)
+          saveStatsToBuffer("Damage dealt", pit.getStatsAsInt("damage_dealt"))
+          saveStatsToBuffer("Damage taken", pit.getStatsAsInt("damage_received"))
+          saveStatsToBuffer("Highest killstreak", pit.getStatsAsInt("max_streak"))
+        }
       case "q" | "quake" | "quakecraft" =>
         val q = new StatsManager(player, "Quake")
         if (q.stats == null) {
@@ -400,8 +421,8 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         }
         firstLine(player, "Quake")
         if (compact) {
-          saveStatsToBuffer("K", q.getStatsAsInt("kills") + q.getStatsAsInt("kills_teams"))
-          saveStatsToBuffer("W", q.getStatsAsInt("wins") + q.getStatsAsInt("wins_teams"))
+          saveStatsToBuffer("Kills", q.getStatsAsInt("kills") + q.getStatsAsInt("kills_teams"))
+          saveStatsToBuffer("Wins", q.getStatsAsInt("wins") + q.getStatsAsInt("wins_teams"))
         } else {
           saveStatsToBuffer("Solo Kills", q.getStatsAsInt("kills"))
           saveStatsToBuffer("Solo Wins", q.getStatsAsInt("wins"))
