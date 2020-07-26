@@ -7,7 +7,7 @@ import com.google.gson.{JsonElement, JsonObject}
 import net.hypixel.api.HypixelAPI
 import net.hypixel.api.reply.PlayerReply
 import net.hypixel.api.util.ILeveling
-import zone.nora.simplestats.util.Utils
+import zone.nora.simplestats.util.{QuestData, Utils}
 
 import scala.collection.mutable.ListBuffer
 
@@ -72,13 +72,14 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
       case _: NullPointerException => 1
     })
     saveStatsToBuffer("AP", player.get("achievementPoints"))
+    saveStatsToBuffer(if (compact) "Quests" else "Quests Completed", QuestData.getData(player.getAsJsonObject("quests")))
     if (!compact) { // Only included in detailed mode
+      saveStatsToBuffer("Karma", player.get("karma"))
       saveStatsToBuffer("Discord", try {
         player.get("socialMedia").getAsJsonObject.get("links").getAsJsonObject.get("DISCORD").getAsString
       } catch {
         case _: NullPointerException => "\u00a7cN/A"
       })
-      saveStatsToBuffer("Karma", player.get("karma"))
       saveStatsToBuffer("Online", try {
         player.get("lastLogin").getAsLong > player.get("lastLogout").getAsLong
       } catch {
