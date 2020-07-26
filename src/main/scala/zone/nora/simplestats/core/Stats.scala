@@ -172,7 +172,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
 
     if (!player.has("stats")) {
       firstLine(player)
-      lines.append("Hidden stats.")
+      lines.append("No stats found.")
       return
     }
 

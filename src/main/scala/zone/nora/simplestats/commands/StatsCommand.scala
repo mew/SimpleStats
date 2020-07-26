@@ -15,8 +15,8 @@ import zone.nora.simplestats.util.Utils
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ListBuffer
 
+//noinspection DuplicatedCode
 class StatsCommand extends CommandBase {
 
   private final val SERVICE: ExecutorService = Executors.newSingleThreadExecutor()
@@ -51,7 +51,8 @@ class StatsCommand extends CommandBase {
           return
         }
 
-        if (api.getKey.get().getRecord.getQueriesInPastMin > 120) {
+        // The actual query limit is 120 q/min but this is capped at 100 to be on the safe side.
+        if (api.getKey.get().getRecord.getQueriesInPastMin > 100) {
           Utils.error("API query limit exceeded. Please try again in a minute.", prefix = true)
           api.shutdown()
           return
@@ -61,29 +62,30 @@ class StatsCommand extends CommandBase {
         val serverMode = args(0).charAt(0).equals('*') // Prints stats of everyone on the server in compact mode.
 
         if (serverMode) {
-          val lines: ListBuffer[String] = new ListBuffer
           val players: util.List[String] = new util.ArrayList[String]()
           Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap.foreach { playerInfo =>
-            // TODO This way of getting all players returns random 10 digit username sometimes.
             players.add(playerInfo.getGameProfile.getName)
           }
 
           if (players.size > 24) players.trimEnd(players.size - 24) // Limited to 24 to not get API query limited.
           SimpleStats.logger.info(s"Stat check queue is $players")
 
-          players.foreach { player =>
+          // Changed from foreach as return wont work in a for each loop.
+          for (player <- players) {
             val stat = new Stats(api, player, compact = true)
-            if (isRequestSuccessful(stat, silent = true)) {
-              if (args.length == 1) stat.saveStats()
-              else stat.saveStats(args(1))
+            if (!isSuccess(stat)) {
+              api.shutdown()
+              return
             }
 
-            lines.append(stat.getStatsInOneLine)
-          }
+            if (stat.player == null) Utils.error(s"Invalid player: $player")
+            else {
+              if (args.length == 1) stat.saveStats()
+              else stat.saveStats(args(1))
 
-          Utils.breakLine()
-          lines.foreach { it => if (!it.isEmpty) Utils.put(it) }
-          Utils.breakLine()
+              stat.printStats()
+            }
+          }
         } else {
           val name = args(0).charAt(0) match {
             case ':' =>
@@ -95,7 +97,13 @@ class StatsCommand extends CommandBase {
           }
 
           val stat = new Stats(api, name, compact = compactMode)
-          if (isRequestSuccessful(stat)) {
+          if (!isSuccess(stat)) {
+            api.shutdown()
+            return
+          }
+
+          if (stat.player == null) Utils.error(s"Invalid player: $name")
+          else {
             if (args.length == 1) stat.saveStats()
             else stat.saveStats(args(1))
             stat.printStats()
@@ -107,18 +115,20 @@ class StatsCommand extends CommandBase {
     })
   }
 
-  private def isRequestSuccessful(stat: Stats, silent: Boolean = false): Boolean = {
-    if (!stat.reply.isSuccess) {
-      if (!silent) Utils.error(s"Unexpected API error: ${stat.reply.getCause}", prefix = true)
-      return false
-    } else if (stat.player == null) {
-      if (!silent) Utils.error("Invalid player.", prefix = true)
-      return false
+  /**
+   * Just gives a error if a player reply API request is not successful.
+   *
+   * @param stat Stats check request
+   */
+  private def isSuccess(stat: Stats): Boolean = {
+    if (stat.reply.isSuccess) true
+    else {
+      Utils.error(s"Unexpected API error: ${stat.reply.getCause}", prefix = true)
+      false
     }
-
-    true
   }
 
+  // TODO Tab completion starts from beginning instead of getting filtered when tabbing after a letter.
   override def addTabCompletionOptions(sender: ICommandSender, args: Array[String], pos: BlockPos): util.List[String] = {
     val playerList: util.List[String] = new util.ArrayList[String]()
     for (player: EntityPlayer <- Minecraft.getMinecraft.theWorld.playerEntities) {
