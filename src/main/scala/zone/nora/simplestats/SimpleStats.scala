@@ -16,7 +16,7 @@ import zone.nora.simplestats.util.Utils
 
 @Mod(modid = "SimpleStats", name = "SimpleStats", version = SimpleStats.VERSION, modLanguage = "scala")
 object SimpleStats {
-  final val VERSION = "1.2" // Current version of SimpleStats
+  final val VERSION = "1.3.1" // Current version of SimpleStats
   val logger: Logger = LogManager.getLogger("SimpleStats")
   var key = "" // Hypixel API key
 
