@@ -6,8 +6,8 @@ import java.util.concurrent.{ExecutorService, Executors}
 
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
+import net.minecraft.client.network.NetworkPlayerInfo
 import net.minecraft.command.{CommandBase, ICommandSender}
-import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.BlockPos
 import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.core.Stats
@@ -64,7 +64,7 @@ class StatsCommand extends CommandBase {
           val lines: ListBuffer[String] = new ListBuffer
           val players: util.List[String] = new util.ArrayList[String]()
           Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap.foreach { playerInfo =>
-            // TODO This way of getting all players returns random 10 digit username sometimes.
+            // TODO This way of getting all players returns random 10 digit username sometimes. (it is NPCS)
             players.add(playerInfo.getGameProfile.getName)
           }
 
@@ -120,12 +120,7 @@ class StatsCommand extends CommandBase {
   }
 
   override def addTabCompletionOptions(sender: ICommandSender, args: Array[String], pos: BlockPos): util.List[String] = {
-    val playerList: util.List[String] = new util.ArrayList[String]()
-    for (player: EntityPlayer <- Minecraft.getMinecraft.theWorld.playerEntities) {
-      playerList.add(player.getName)
-    }
-
-    playerList
+    Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap.map((network: NetworkPlayerInfo) => network.getGameProfile.getName).toList
   }
 
   override def canCommandSenderUseCommand(sender: ICommandSender): Boolean = true
