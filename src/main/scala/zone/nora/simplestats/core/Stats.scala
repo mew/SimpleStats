@@ -182,7 +182,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           return
         }
         firstLine(player, "Arcade")
-        saveStatsToBuffer("Coins", arcade.getStatsAsInt("coin"))
+        saveStatsToBuffer("Coins", arcade.getStatsAsInt("coins"))
       case "ab" | "arena" | "arenabrawl" =>
         val arena = new StatsManager(player, "Arena")
         if (arena.stats == null) {
