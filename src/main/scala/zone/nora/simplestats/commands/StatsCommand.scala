@@ -23,7 +23,7 @@ class StatsCommand extends CommandBase {
 
   override def getCommandUsage(sender: ICommandSender): String = "/stats [player]"
 
-  override def getCommandAliases: util.List[String] = ("hstats" :: "stat" :: Nil).asJava
+  override def getCommandAliases: util.List[String] = ("hstats" :: Nil).asJava
 
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
     SERVICE.execute(new Runnable {
