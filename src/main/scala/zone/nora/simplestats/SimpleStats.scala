@@ -18,6 +18,7 @@ import zone.nora.simplestats.util.Utils
 object SimpleStats {
   final val VERSION = "1.3.1" // Current version of SimpleStats
   val logger: Logger = LogManager.getLogger("SimpleStats")
+  var valid = false // Is the API key valid
   var key = "" // Hypixel API key
 
   @EventHandler
@@ -31,8 +32,10 @@ object SimpleStats {
         if (file.exists) {
           val parser = new JsonParser().parse(FileUtils.readFileToString(file))
           key = parser.getAsJsonObject.get("key").getAsString
-          if (Utils.validateKey(key)) logger.info("Valid Hypixel API key found.")
-          else logger.error("Invalid Hypixel API key found at " + file.getCanonicalPath)
+          if (Utils.validateKey(key)) {
+            logger.info("Valid Hypixel API key found.")
+            valid = true
+          } else logger.error("Invalid Hypixel API key found at " + file.getCanonicalPath)
         } else {
           val oldConfigFile = new File("apikey.txt")
           // Grab Hypixel API key from where it was stored in older versions of the mod.
@@ -41,6 +44,7 @@ object SimpleStats {
             val apiKey = FileUtils.readFileToString(oldConfigFile)
             if (Utils.validateKey(apiKey)) {
               key = apiKey
+              valid = true
               file.createNewFile
               val jsonObject = new JsonObject
               jsonObject.addProperty("key", apiKey)

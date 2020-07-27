@@ -21,6 +21,7 @@ class SetKeyCommand extends CommandBase {
           val key = args(0)
           if (key.length == 36 && Utils.validateKey(key)) {
             SimpleStats.key = key
+            SimpleStats.valid = true
 
             val file = new File("config/simplestats.cfg")
             if (!file.exists()) file.createNewFile()

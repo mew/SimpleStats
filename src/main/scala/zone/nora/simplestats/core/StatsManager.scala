@@ -8,13 +8,13 @@ import zone.nora.simplestats.util.Utils
  *
  * @param resp Player response JSON object.
  * @param game The name of the game.
- * @param subkey Makes stats property return a sub property of a game stats property
+ * @param subkey Makes stats property return a sub property of a game stats property.
  */
 class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
 
   val stats: JsonObject = try {
-    if (subkey == null) resp.get("stats").getAsJsonObject.get(game).getAsJsonObject
-    else resp.get("stats").getAsJsonObject.get(game).getAsJsonObject.get(subkey).getAsJsonObject
+    if (subkey == null) resp.getAsJsonObject("stats").getAsJsonObject(game)
+    else resp.getAsJsonObject("stats").getAsJsonObject(game).getAsJsonObject(subkey)
   } catch {
     case _:Exception =>
       Utils.error(s"No stats available for $game", prefix = true)

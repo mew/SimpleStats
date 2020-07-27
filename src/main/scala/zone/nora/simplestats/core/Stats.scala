@@ -48,20 +48,16 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
    */
   def getStatsInOneLine: String = {
     val str = new StringBuilder
-    //lines.foreach { it => str.append(it).append("\u00a7f").append(" ") }
     lines.indices.foreach { it => str.append(s"${lines(it)}\u00a7f ${if (it != lines.size - 1 && it != 0) "| " else ""}") }
     str.toString()
   }
 
   /**
    * Saves profile stats into the line buffer.
-   *
-   * @note Also prints them if {print} is true
    */
   def saveStats(): Unit = {
     firstLine(player)
     if (player == null) {
-      firstLine(player)
       lines.append("Invalid player.")
       return
     }
@@ -160,8 +156,6 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
    * Saves stats of a Hypixel player to the line buffer.
    *
    * @param game Name of the game.
-   * @note prints stats as well if {print} is true.
-   * @note compact mode is only defined for bedwars atm.
    */
   def saveStats(game: String): Unit = {
     if (player == null) {
@@ -172,7 +166,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
 
     if (!player.has("stats")) {
       firstLine(player)
-      lines.append("\u00a7cThis player has hidden their stats.")
+      lines.append("\u00a7cNo stats found.")
       return
     }
 
@@ -316,8 +310,10 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         saveStatsToBuffer("Gold Trophies", tkr.getStatsAsInt("gold_trophy"))
         saveStatsToBuffer("Silver Trophies", tkr.getStatsAsInt("silver_trophy"))
         saveStatsToBuffer("Bronze Trophies", tkr.getStatsAsInt("bronze_trophy"))
-        if (!compact)
+        if (!compact) {
+          saveStatsToBuffer("Wins", tkr.getStatsAsInt("wins"))
           saveStatsToBuffer("Coins", tkr.getStatsAsInt("coins"))
+        }
       case "blitz" | "bsg" | "sg" | "hg" | "hungergames" =>
         val bsg = new StatsManager(player, "HungerGames")
         if (bsg.stats == null) {
@@ -685,7 +681,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         }
         val guild = guildReply.getGuild
         if (guild == null) {
-          Utils.error(s"${player.get("displayname").getAsString} is not in a guild.", true)
+          Utils.error(s"${player.get("displayname").getAsString} is not in a guild.", prefix = true)
           api.shutdown()
           return
         }
