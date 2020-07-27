@@ -19,7 +19,3 @@ As of 1.3, you can get stats for everyone in your lobby (`/stats * [game]`):
 1. Download from the [releases page](https://github.com/mew/SimpleStats/releases)
 2. Put jar into your mods folder
 3. When in game, set your Hypixel API key with /setkey
-
-## Credits
-Developers: Zunora, WaningMatrix and Befall  
-Special thanks to LEGENDFF and littlemissmadivirus

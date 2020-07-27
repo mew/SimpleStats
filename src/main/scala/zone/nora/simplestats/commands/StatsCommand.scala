@@ -5,6 +5,7 @@ import java.util.UUID
 import java.util.concurrent.{ExecutorService, Executors}
 
 import net.hypixel.api.HypixelAPI
+import net.hypixel.api.exceptions.HypixelAPIException
 import net.minecraft.client.Minecraft
 import net.minecraft.command.{CommandBase, ICommandSender}
 import zone.nora.simplestats.SimpleStats
@@ -42,11 +43,12 @@ class StatsCommand extends CommandBase {
             return
         }
 
-        val api = new HypixelAPI(apiKey)
-        if (!api.getKey.get().isSuccess) {
-          Utils.error("Invalid Hypixel API key. Use /setkey <key>", prefix = true)
-          api.shutdown()
-          return
+        val api = try {
+          new HypixelAPI(apiKey)
+        } catch {
+          case _: HypixelAPIException =>
+            Utils.error("Invalid Hypixel API key", prefix = true)
+            return
         }
 
         // Prints API key statistics

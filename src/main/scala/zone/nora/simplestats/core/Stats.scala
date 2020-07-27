@@ -133,7 +133,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
     }
 
     val statColour = s"\u00a7${f(value)}"
-    val done = try { y(value.toString) } catch { case _ => value.toString }
+    val done = try { y(value.toString) } catch { case _: Throwable => value.toString }
     lines.append(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$done"}")
   }
 
