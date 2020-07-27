@@ -47,7 +47,7 @@ class StatsCommand extends CommandBase {
           new HypixelAPI(apiKey)
         } catch {
           case _: HypixelAPIException =>
-            Utils.error("Invalid Hypixel API key", prefix = true)
+            Utils.error("Invalid Hypixel API key. Do /setkey <key>", prefix = true)
             return
         }
 
