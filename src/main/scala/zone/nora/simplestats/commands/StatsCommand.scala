@@ -114,7 +114,11 @@ class StatsCommand extends CommandBase {
             case _ =>
               args(0)
           }
-
+          val alphanum = (('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).toSet
+          if (!name.forall(alphanum.contains)){
+            Utils.error(s"Illegal Characters: $name")
+            return
+          }
           val stat = new Stats(api, name, compact = compactMode)
           if (!isSuccess(stat)) {
             api.shutdown()
