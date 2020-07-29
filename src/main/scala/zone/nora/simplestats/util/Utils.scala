@@ -13,9 +13,9 @@ import net.minecraft.util.ChatComponentText
 import zone.nora.simplestats.SimpleStats
 
 object Utils {
-
-  final val PREFIX = "\u00a79[\u00a76SS\u00a79] \u00a7f"
-  private val mc = Minecraft.getMinecraft
+  private final val PREFIX = "\u00a79[\u00a76SS\u00a79] \u00a7f"
+  private final val VERSION_URL = new URL("https://raw.githubusercontent.com/mew/simplestats/master/version.txt")
+  private final val MINECRAFT = Minecraft.getMinecraft
 
   def validateKey(apiKey: String): Boolean = try {
     val api = new HypixelAPI(UUID.fromString(apiKey))
@@ -100,6 +100,8 @@ object Utils {
     c.+(Utils.roundDouble(exp / increment))
   }
 
+  def roundDouble(n: Double): Double = (math rint n * 100) / 100
+
   def getWarlordsClassLevel(bg: JsonObject, wlClass: String): Int = {
     val list = List(
       "cooldown",
@@ -121,31 +123,28 @@ object Utils {
     total
   }
 
-  def roundDouble(n: Double): Double = (math rint n * 100) / 100
-
   def parseTime(time: Long): String = try
     new SimpleDateFormat("dd/MM/yyyy").format(new Date(new Timestamp(time).getTime))
   catch {
     case _: Exception => "N/A"
-  } // Hypixel Staff can hide their stats, which causes this function to freak out.
+  } // Hypixel staff can hide their stats, which causes this function to freak out.
 
   def error(message: String, prefix: Boolean = false): Unit = put(s"\u00a7c$message", prefix)
 
   def put(message: String, prefix: Boolean = false): Unit =
-    mc.thePlayer.addChatMessage(new ChatComponentText(s"${if (prefix) PREFIX else ""}$message"))
+    MINECRAFT.thePlayer.addChatMessage(new ChatComponentText(s"${if (prefix) PREFIX else ""}$message"))
 
   def breakLine(): Unit = {
     val dashes = new StringBuilder
-    val dash = Math.floor((280 * mc.gameSettings.chatWidth + 40) / 320 * (1 / mc.gameSettings.chatScale) * 53).toInt - 3
+    val dash = Math.floor((280 * MINECRAFT.gameSettings.chatWidth + 40) / 320 * (1 / MINECRAFT.gameSettings.chatScale) * 53).toInt - 3
     for (i <- 1 to dash)
       if (i == (dash / 2)) dashes.append("\u00a79[\u00a76SS\u00a79]\u00a79\u00a7m") else dashes.append("-")
-    mc.thePlayer.addChatMessage(new ChatComponentText(s"\u00a79\u00a7m$dashes"))
+    MINECRAFT.thePlayer.addChatMessage(new ChatComponentText(s"\u00a79\u00a7m$dashes"))
   }
 
   def checkForUpdates(): String = {
     try {
-      val url = new URL("https://raw.githubusercontent.com/mew/simplestats/master/version.txt")
-      val connection = url.openConnection
+      val connection = VERSION_URL.openConnection
       connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 5.1; rv:19.0) Gecko/20100101 Firefox/19.0")
       connection.connect()
       val serverResponse: BufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream))

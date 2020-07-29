@@ -1,7 +1,6 @@
 package zone.nora.simplestats.commands
 
 import java.util
-import java.util.UUID
 import java.util.concurrent.{ExecutorService, Executors}
 
 import net.hypixel.api.HypixelAPI
@@ -17,7 +16,7 @@ import scala.collection.mutable.ListBuffer
 
 class StatsCommand extends CommandBase {
 
-  private final val SERVICE: ExecutorService = Executors.newSingleThreadExecutor()
+  private final val COMMAND_EXECUTOR: ExecutorService = Executors.newSingleThreadExecutor()
 
   override def getCommandName: String = "stats"
 
@@ -26,20 +25,11 @@ class StatsCommand extends CommandBase {
   override def getCommandAliases: util.List[String] = ("hstats" :: Nil).asJava
 
   override def processCommand(sender: ICommandSender, args: Array[String]): Unit = {
-    SERVICE.execute(new Runnable {
+    COMMAND_EXECUTOR.execute(new Runnable {
       override def run(): Unit = {
         if (args.isEmpty) {
           Utils.error(s"/stats [player] [game]", prefix = true)
           return
-        }
-
-        val apiKey = try {
-          UUID.fromString(SimpleStats.key)
-        } catch {
-          case e: IllegalArgumentException =>
-            Utils.error("You haven't set your Hypixel API yet. Use /setkey <key>", prefix = true)
-            SimpleStats.logger.error(e.printStackTrace())
-            return
         }
 
         if (!SimpleStats.valid) {
@@ -48,26 +38,7 @@ class StatsCommand extends CommandBase {
         }
 
         // Hypixel API instance
-        val api = new HypixelAPI(apiKey)
-
-        // Prints API key statistics
-        val keyStats = api.getKey.get().getRecord
-        if (args(0).equals("#")) {
-          Utils.breakLine()
-          Utils.put(s"Total queries: ${keyStats.getTotalQueries}")
-          Utils.put(s"Queries in last minute: ${keyStats.getQueriesInPastMin}")
-          Utils.breakLine()
-          api.shutdown()
-          return
-        }
-
-        // The actual query limit is 120 q/min but this is capped at 100 to be on the safe side.
-        if (keyStats.getQueriesInPastMin > 100) {
-          Utils.error("API query limit exceeded. Please try again in a minute.", prefix = true)
-          api.shutdown()
-          return
-        }
-
+        val api = new HypixelAPI(SimpleStats.key)
         val compactMode = args(0).charAt(0).equals(':') // Putting this before a name activates compact mode.
         val serverMode = args(0).charAt(0).equals('*') // Prints stats of everyone on the server in compact mode.
 
@@ -114,11 +85,7 @@ class StatsCommand extends CommandBase {
             case _ =>
               args(0)
           }
-          val alphanum = (('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).toSet
-          if (!name.forall(alphanum.contains)){
-            Utils.error(s"Illegal Characters: $name")
-            return
-          }
+
           val stat = new Stats(api, name, compact = compactMode)
           if (!isSuccess(stat)) {
             api.shutdown()
@@ -131,6 +98,11 @@ class StatsCommand extends CommandBase {
             else stat.saveStats(args(1))
             stat.printStats()
           }
+        }
+
+        // Check afterwards to not slow the actual command down.
+        if (api.getKey.get().getRecord.getQueriesInPastMin > 100) {
+          Utils.error("API query limit exceeded. Please wait a minute before trying again!", prefix = true)
         }
 
         api.shutdown()
