@@ -10,6 +10,7 @@ import net.hypixel.api.util.ILeveling
 import zone.nora.simplestats.util.{QuestData, Utils}
 
 import scala.collection.mutable.ListBuffer
+import scala.util.control.NonFatal
 
 /**
  * Gets the stats of a Hypixel player into a line buffer.
@@ -732,7 +733,15 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         firstLine(player, guild = true)
         saveStatsToBuffer("Name", guild.getName)
         saveStatsToBuffer("Level", Utils.getGuildLevel(guild.getExp))
-        saveStatsToBuffer("Tag", s"${Utils.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]")
+        try {
+          saveStatsToBuffer("Tag", try {
+            s"${Utils.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]"
+          } catch {
+            case _: NullPointerException => s"[${guild.getTag}]"
+          })
+        } catch {
+          case NonFatal(_) => // nothing lol
+        }
         if (!compact) {
           saveStatsToBuffer("Joinable", guild.getJoinable)
           saveStatsToBuffer("Legacy Rank", guild.getLegacyRanking)
