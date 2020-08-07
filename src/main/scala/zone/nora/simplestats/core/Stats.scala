@@ -2,7 +2,6 @@ package zone.nora.simplestats.core
 
 import java.math.BigInteger
 import java.sql.Timestamp
-import java.util.UUID
 
 import com.google.gson.{JsonElement, JsonObject}
 import net.hypixel.api.HypixelAPI
@@ -674,7 +673,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Coins", mm.getStatsAsInt("coins"))
         }
       case "status" | "session" | "s" | "online" =>
-        val statusReply = api.getStatus(UUID.fromString(player.get("uuid").getAsString)).get()
+        val statusReply = api.getStatus(Utils.addDashes(player.get("uuid").getAsString)).get()
         if (!statusReply.isSuccess || statusReply.getSession == null) {
           Utils.error(s"Unexpected error getting ${player.get("displayname").getAsString}'s online status:'", prefix = true)
           Utils.error(statusReply.getCause)

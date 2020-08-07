@@ -4,6 +4,7 @@ import java.io.{BufferedReader, InputStreamReader}
 import java.net.URL
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util.regex.Pattern
 import java.util.{Date, UUID}
 
 import com.google.gson.JsonObject
@@ -142,6 +143,9 @@ object Utils {
       if (i == (dash / 2)) dashes.append("\u00a79[\u00a76SS\u00a79]\u00a79\u00a7m") else dashes.append("-")
     MINECRAFT.thePlayer.addChatMessage(new ChatComponentText(s"\u00a79\u00a7m$dashes"))
   }
+
+  def addDashes(uuidString: String): UUID =
+    UUID.fromString(Pattern.compile("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})").matcher(uuidString).replaceAll("$1-$2-$3-$4-$5"))
 
   def checkForUpdates(): String = {
     try {
