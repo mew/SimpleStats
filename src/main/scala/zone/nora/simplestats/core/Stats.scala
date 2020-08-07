@@ -2,6 +2,7 @@ package zone.nora.simplestats.core
 
 import java.math.BigInteger
 import java.sql.Timestamp
+import java.util.UUID
 
 import com.google.gson.{JsonElement, JsonObject}
 import net.hypixel.api.HypixelAPI
@@ -136,7 +137,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
   /**
    * Prints the first line showing the name/guild of the player.
    */
-  private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false): Unit = {
+  private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false, status: Boolean = false): Unit = {
     val rank = try Utils.getRank(player)
     catch {
       case e: Exception => e.printStackTrace(); ""
@@ -147,7 +148,8 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
 
     if (compact) lines.append(name)
     else {
-      val str = if (game == "" && !guild) "Stats" else if (guild) "Guild" else s"$game stats"
+      val str =
+        if (game == "" && !guild) "Stats" else if (guild) "Guild" else if (status) "Online status" else s"$game stats"
       lines.append(s"$str of $name")
     }
   }
@@ -671,10 +673,28 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Murderer Kills", mm.getStatsAsInt("kills_as_murderer"))
           saveStatsToBuffer("Coins", mm.getStatsAsInt("coins"))
         }
+      case "status" | "session" | "s" | "online" =>
+        val statusReply = api.getStatus(UUID.fromString(player.get("uuid").getAsString)).get()
+        if (!statusReply.isSuccess || statusReply.getSession == null) {
+          Utils.error(s"Unexpected error getting ${player.get("displayname").getAsString}'s online status:'", prefix = true)
+          Utils.error(statusReply.getCause)
+          api.shutdown()
+          return
+        }
+        val status = statusReply.getSession
+        firstLine(player, status = true)
+        saveStatsToBuffer("Online", status.isOnline)
+        if (status.isOnline) {
+          saveStatsToBuffer("Game", status.getGameType.getName)
+          if (!compact) {
+            saveStatsToBuffer("Mode", status.getMode)
+            saveStatsToBuffer("Map", status.getMap)
+          }
+        }
       case "g" | "guild" =>
         val guildReply = api.getGuildByPlayer(player.get("uuid").getAsString).get()
         if (!guildReply.isSuccess) {
-          Utils.error(s"Unexpected error getting ${player.get("displayname").getAsString}'s Guild:'")
+          Utils.error(s"Unexpected error getting ${player.get("displayname").getAsString}'s Guild:'", prefix = true)
           Utils.error(guildReply.getCause)
           api.shutdown()
           return
@@ -688,8 +708,10 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         firstLine(player, guild = true)
         saveStatsToBuffer("Name", guild.getName)
         saveStatsToBuffer("Level", Utils.getGuildLevel(guild.getExp))
+        saveStatsToBuffer("Tag", s"${Utils.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]")
         if (!compact) {
-          saveStatsToBuffer("Tag", s"[${guild.getTag}]")
+          saveStatsToBuffer("Joinable", guild.getJoinable)
+          saveStatsToBuffer("Legacy Rank", guild.getLegacyRanking)
           saveStatsToBuffer("Created", Utils.parseTime(Timestamp.valueOf(guild.getCreated.toLocalDateTime).getTime))
           saveStatsToBuffer("Members", s"${guild.getMembers.size}/125")
         }
@@ -700,7 +722,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         List(
           "arcade", "arenabrawl", "warlords", "bedwars", "duels", "tkr", "blitz", "legacy", "cvc", "paintball",
           "quake", "skywars", "skyclash", "speeduhc", "smash", "tnt", "crazywalls", "uhc", "vampirez", "walls",
-          "megawalls", "murdermystery", "pit", "guild"
+          "megawalls", "murdermystery", "pit", "status", "guild"
         ).foreach { it => Utils.put(s"\u00a78- \u00a7a$it") }
         Utils.breakLine()
     }

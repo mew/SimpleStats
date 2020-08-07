@@ -17,6 +17,24 @@ object Utils {
   private final val VERSION_URL = new URL("https://raw.githubusercontent.com/mew/simplestats/master/version.txt")
   private final val MINECRAFT = Minecraft.getMinecraft
 
+  val colourNameToCode = Map(
+    "black" -> "\u00a70",
+    "dark_green" -> "\u00a72",
+    "dark_aqua" -> "\u00a73",
+    "dark_red" -> "\u00a74",
+    "dark_purple" -> "\u00a75",
+    "gold" -> "\u00a76",
+    "gray" -> "\u00a77",
+    "dark_gray" -> "\u00a78",
+    "blue" -> "\u00a79",
+    "green" -> "\u00a7a",
+    "aqua" -> "\u00a7b",
+    "red" -> "\u00a7c",
+    "light_purple" -> "\u00a7d",
+    "yellow" -> "\u00a7e",
+    "white" -> "\u00a7f"
+  )
+
   def validateKey(apiKey: String): Boolean = try {
     val api = new HypixelAPI(UUID.fromString(apiKey))
     val response: Boolean = api.getKey.get().isSuccess
@@ -39,23 +57,6 @@ object Utils {
       if (player.has("monthlyPackageRank") && player.get("monthlyPackageRank").getAsString == "SUPERSTAR")
         playerRank = "MVP_PLUS_PLUS"
     if (rank == "NONE") playerRank = null
-    val colourNameToCode = Map(
-      "black" -> "\u00a70",
-      "dark_green" -> "\u00a72",
-      "dark_aqua" -> "\u00a73",
-      "dark_red" -> "\u00a74",
-      "dark_purple" -> "\u00a75",
-      "gold" -> "\u00a76",
-      "gray" -> "\u00a77",
-      "dark_gray" -> "\u00a78",
-      "blue" -> "\u00a79",
-      "green" -> "\u00a7a",
-      "aqua" -> "\u00a7b",
-      "red" -> "\u00a7c",
-      "light_purple" -> "\u00a7d",
-      "yellow" -> "\u00a7e",
-      "white" -> "\u00a7f"
-    )
 
     val plusColour = if (player.has("rankPlusColor"))
       colourNameToCode(player.get("rankPlusColor").getAsString.toLowerCase) else "\u00a7c"
