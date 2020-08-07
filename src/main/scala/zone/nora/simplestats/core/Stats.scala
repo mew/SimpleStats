@@ -62,8 +62,13 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
       return
     }
 
-    saveStatsToBuffer("Hypixel Level", try {
-      ILeveling.getLevel(player.get("networkExp").getAsDouble).toInt
+    saveStatsToBuffer("Network Level", try {
+      val exp = player.get("networkExp").getAsDouble
+      val level = ILeveling.getLevel(exp).toInt
+      if (compact) level else {
+        val percent = (ILeveling.getPercentageToNextLevel(exp) * 100).toInt
+        s"$level ($percent% to ${level + 1})"
+      }
     } catch {
       case _: NullPointerException => 1
     })
@@ -113,7 +118,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
     }
 
     def y(value: String): String = {
-      if (value.contains("/")) value
+      if (value.contains("/") || value.contains("\u272b")) value
       else if (value.contains("#")) value
       else {
         val digits = "\\d+.\\d+".r.unanchored
@@ -241,8 +246,28 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           return
         }
         firstLine(player, "BedWars")
-        if (bw.achievements != null)
-          saveStatsToBuffer("Level", s"${bw.achievements.get("bedwars_level").getAsInt}\u272b")
+        if (bw.achievements != null) {
+          val level = bw.achievements.get("bedwars_level").getAsInt
+          val colour = level match {
+            case level if 100 to 199 contains level => 'f'
+            case level if 200 to 299 contains level => '6'
+            case level if 300 to 399 contains level => 'b'
+            case level if 400 to 499 contains level => '2'
+            case level if 500 to 599 contains level => '3'
+            case level if 600 to 699 contains level => '4'
+            case level if 700 to 799 contains level => 'd'
+            case level if 800 to 899 contains level => '9'
+            case level if 900 to 999 contains level => '5'
+            case level if 1000 to 9999 contains level =>
+              //val chars = level.toString.toCharArray
+              val level_ = level.toString
+              //s"6${chars(0)}\u00a7e${chars(1)}\u00a7a${chars(2)}\u00a7b${chars(3)}\u00a7d"
+              s"6${level_.charAt(0)}\u00a7e${level_.charAt(1)}\u00a7a${level_.charAt(2)}\u00a7b${level_.charAt(3)}\u00a7d"
+            case _ => 7
+          }
+          println(level)
+          saveStatsToBuffer("Level", s"\u00a7$colour${if (colour.isInstanceOf[String]) "" else level}\u272b")
+        }
 
         val wlr = Utils.roundDouble(bw.getStatsAsDouble("wins_bedwars") / bw.getStatsAsInt("losses_bedwars", one = true))
         val fkdr = Utils.roundDouble(bw.getStatsAsDouble("final_kills_bedwars") / bw.getStatsAsInt("final_deaths_bedwars", one = true))
@@ -257,7 +282,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Final Kills", bw.getStatsAsInt("final_kills_bedwars"))
           saveStatsToBuffer("Final Deaths", bw.getStatsAsInt("final_deaths_bedwars"))
           saveStatsToBuffer("FKDR", fkdr)
-          saveStatsToBuffer("WS", bw.getStatsAsInt("winstreak"))
+          saveStatsToBuffer("Winstreak", bw.getStatsAsInt("winstreak"))
           saveStatsToBuffer("Kills", bw.getStatsAsInt("kills_bedwars"))
           saveStatsToBuffer("Coins", bw.getStatsAsInt("coins"))
         }
