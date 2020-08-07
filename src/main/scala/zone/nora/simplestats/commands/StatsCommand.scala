@@ -73,7 +73,7 @@ class StatsCommand extends CommandBase {
 
           if (listBuffer.nonEmpty) {
             Utils.breakLine()
-            listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it, prefix = true) }
+            listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it) }
             Utils.breakLine()
           }
         } else {
