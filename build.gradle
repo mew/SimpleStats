@@ -53,7 +53,7 @@ configurations {
 }
 
 dependencies {
-    embed 'com.github.HypixelDev.PublicAPI:Java:2.0.0'
+    embed 'com.github.HypixelDev.PublicAPI:Java:4e69586148'
 }
 
 processResources
