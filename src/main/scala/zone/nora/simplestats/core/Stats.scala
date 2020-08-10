@@ -266,7 +266,6 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
               s"6${level_.charAt(0)}\u00a7e${level_.charAt(1)}\u00a7a${level_.charAt(2)}\u00a7b${level_.charAt(3)}\u00a7d"
             case _ => 7
           }
-          println(level)
           saveStatsToBuffer("Level", s"\u00a7$colour${if (colour.isInstanceOf[String]) "" else level}\u272b")
         }
 

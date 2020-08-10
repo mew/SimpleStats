@@ -30,14 +30,11 @@ class StatsCommand extends CommandBase {
         if (args.isEmpty) {
           Utils.error(s"/stats [player] [game]", prefix = true)
           return
-        }
-
-        if (!SimpleStats.valid) {
+        } else if (!SimpleStats.valid) {
           Utils.error("Invalid Hypixel API key!", prefix = true)
           return
         }
 
-        // Hypixel API instance
         val api = new HypixelAPI(SimpleStats.key)
         val compactMode = args(0).charAt(0).equals(':') // Putting this before a name activates compact mode.
         val serverMode = args(0).charAt(0).equals('*') // Prints stats of everyone on the server in compact mode.
@@ -46,14 +43,10 @@ class StatsCommand extends CommandBase {
           val players: util.List[String] = new util.ArrayList[String]()
           Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap.foreach { playerInfo =>
             players.add(playerInfo.getGameProfile.getName)
+            if (players.size() >= 24) return
           }
 
-          if (players.size > 24) players.trimEnd(players.size - 24) // Limited to 24 to not get API query limited.
-          SimpleStats.logger.info(s"Stats check queue is $players")
-
           val listBuffer: ListBuffer[String] = new ListBuffer[String]
-
-          // Changed from foreach as return wont work in a for each loop.
           for (player <- players) {
             val stat = new Stats(api, player, compact = true)
             if (!isSuccess(stat)) {
@@ -116,11 +109,9 @@ class StatsCommand extends CommandBase {
    * @param stat Stats check request
    */
   private def isSuccess(stat: Stats): Boolean = {
-    if (stat.reply.isSuccess) true
-    else {
-      Utils.error(s"Unexpected API error: ${stat.reply.getCause}", prefix = true)
-      false
-    }
+    if (stat.reply.isSuccess) return true
+    else Utils.error(s"Unexpected API error: ${stat.reply.getCause}", prefix = true)
+    false
   }
 
   override def canCommandSenderUseCommand(sender: ICommandSender): Boolean = true
