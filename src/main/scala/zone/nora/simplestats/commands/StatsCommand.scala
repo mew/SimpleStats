@@ -36,10 +36,8 @@ class StatsCommand extends CommandBase {
         }
 
         val api = new HypixelAPI(SimpleStats.key)
-        val compactMode = args(0).charAt(0).equals(':') // Putting this before a name activates compact mode.
-        val serverMode = args(0).charAt(0).equals('*') // Prints stats of everyone on the server in compact mode.
 
-        if (serverMode) {
+        if (args(0).charAt(0).equals('*')) { // Server mode
           val players: util.List[String] = new util.ArrayList[String]()
           Minecraft.getMinecraft.getNetHandler.getPlayerInfoMap.foreach { playerInfo =>
             players.add(playerInfo.getGameProfile.getName)
@@ -70,16 +68,10 @@ class StatsCommand extends CommandBase {
             Utils.breakLine()
           }
         } else {
-          val name = args(0).charAt(0) match {
-            case ':' =>
-              args(0).replaceAll(":", "")
-            case '.' =>
-              Minecraft.getMinecraft.thePlayer.getName
-            case _ =>
-              args(0)
-          }
-
-          val stat = new Stats(api, name, compact = compactMode)
+          val name: String = if (args(0).contains(".")) Minecraft.getMinecraft.thePlayer.getName
+          else args(0).replaceAll(":", "")
+          
+          val stat = new Stats(api, name, compact = args(0).contains(":"))
           if (!isSuccess(stat)) {
             api.shutdown()
             return
@@ -92,12 +84,7 @@ class StatsCommand extends CommandBase {
             stat.printStats()
           }
         }
-
-        // Check afterwards to not slow the actual command down.
-        if (api.getKey.get().getRecord.getQueriesInPastMin > 100) {
-          Utils.error("API query limit exceeded. Please wait a minute before trying again!", prefix = true)
-        }
-
+        
         api.shutdown()
       }
     })
