@@ -43,7 +43,9 @@ class StatsCommand extends CommandBase {
             players.add(playerInfo.getGameProfile.getName)
             if (players.size() >= 24) return
           }
-
+          
+          SimpleStats.logger.info(s"Stat check queue is $players")	
+          
           val listBuffer: ListBuffer[String] = new ListBuffer[String]
           for (player <- players) {
             val stat = new Stats(api, player, compact = true)
