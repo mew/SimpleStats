@@ -67,7 +67,13 @@ class StatsCommand extends CommandBase {
             listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it) }
             Utils.breakLine()
           }
-        } else {
+        } else if (args(0).charAt(0).equals('#')) { // API key statistics
+          val keyStats = api.getKey.get().getRecord
+          Utils.breakLine()	
+          Utils.put(s"Total queries: ${keyStats.getTotalQueries}")	
+          Utils.put(s"Queries in last minute: ${keyStats.getQueriesInPastMin}")	
+          Utils.breakLine()
+        } else { // Single player mode
           val name: String = if (args(0).contains(".")) Minecraft.getMinecraft.thePlayer.getName
           else args(0).replaceAll(":", "")
           
