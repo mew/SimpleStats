@@ -31,7 +31,7 @@ class StatsCommand extends CommandBase {
           Utils.error(s"/stats [player] [game]", prefix = true)
           return
         } else if (!SimpleStats.valid) {
-          Utils.error("Invalid Hypixel API key!", prefix = true)
+          Utils.error("Invalid Hypixel API key! Do /setkey <apikey>", prefix = true)
           return
         }
 
@@ -69,7 +69,7 @@ class StatsCommand extends CommandBase {
             listBuffer.foreach { it => if (!it.isEmpty) Utils.put(it) }
             Utils.breakLine()
           }
-        } else if (args(0).charAt(0).equals('#')) { // API key statistics
+        } else if (args(0).equals("#")) { // API key statistics
           val keyStats = api.getKey.get().getRecord
           Utils.breakLine()	
           Utils.put(s"Total queries: ${keyStats.getTotalQueries}")	
