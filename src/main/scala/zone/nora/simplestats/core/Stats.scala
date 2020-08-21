@@ -222,11 +222,9 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("FKDR", fkdr)
           saveStatsToBuffer("WS", bw.getStatsAsInt("winstreak"))
         } else {
-          saveStatsToBuffer("Wins", bw.getStatsAsInt("wins_bedwars"))
-          saveStatsToBuffer("Losses", bw.getStatsAsInt("losses_bedwars"))
+          saveStatsToBuffer("W | L", bw.getStatsAsInt("wins_bedwars") + " | " + bw.getStatsAsInt("losses_bedwars"))
           saveStatsToBuffer("WLR", wlr)
-          saveStatsToBuffer("Final Kills", bw.getStatsAsInt("final_kills_bedwars"))
-          saveStatsToBuffer("Final Deaths", bw.getStatsAsInt("final_deaths_bedwars"))
+          saveStatsToBuffer("Final K | D", bw.getStatsAsInt("final_kills_bedwars") + " | " + bw.getStatsAsInt("final_deaths_bedwars"))
           saveStatsToBuffer("FKDR", fkdr)
           saveStatsToBuffer("Winstreak", bw.getStatsAsInt("winstreak"))
           saveStatsToBuffer("Kills", bw.getStatsAsInt("kills_bedwars"))
