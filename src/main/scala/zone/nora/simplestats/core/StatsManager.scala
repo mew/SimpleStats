@@ -6,8 +6,8 @@ import zone.nora.simplestats.util.Utils
 /**
  * Manages game stats values without running into stupid null pointers.
  *
- * @param resp Player response JSON object.
- * @param game The name of the game.
+ * @param resp   Player response JSON object.
+ * @param game   The name of the game.
  * @param subkey Makes stats property return a sub property of a game stats property.
  */
 class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
@@ -16,7 +16,7 @@ class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
     if (subkey == null) resp.getAsJsonObject("stats").getAsJsonObject(game)
     else resp.getAsJsonObject("stats").getAsJsonObject(game).getAsJsonObject(subkey)
   } catch {
-    case _:Exception =>
+    case _: Exception =>
       Utils.error(s"No stats available for $game", prefix = true)
       null
   }
@@ -24,7 +24,7 @@ class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
   val achievements: JsonObject = try {
     resp.get("achievements").getAsJsonObject
   } catch {
-    case _:Exception =>
+    case _: Exception =>
       null
   }
 
@@ -34,7 +34,7 @@ class StatsManager(resp: JsonObject, game: String, subkey: String = null) {
    * Use this when you expect a Int response.
    *
    * @param name The name of the JSON key.
-   * @param one Return one if response is zero. Useful for handling arithmetic exceptions.
+   * @param one  Return one if response is zero. Useful for handling arithmetic exceptions.
    * @return An actual integer or 0 if null.
    */
   def getStatsAsInt(name: String, one: Boolean = false): Int = try {

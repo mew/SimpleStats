@@ -15,8 +15,8 @@ import net.minecraft.util.IChatComponent;
 public class ChatComponentBuilder {
     private final IChatComponent parent;
 
-    private String text;
-    private ChatStyle style;
+    private final String text;
+    private final ChatStyle style;
 
     private ChatComponentBuilder(String text) {
         this(text, null, Inheritance.SHALLOW);

@@ -23,10 +23,18 @@ import scala.util.control.NonFatal
 class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
 
   // Player reply from Hypixel API
-  val reply: PlayerReply = api.getPlayerByName(name).get()
+  val reply: PlayerReply = try {
+    api.getPlayerByName(name).get()
+  } catch {
+    case _: Exception => null
+  }
 
   // Player response JSON object from Hypixel API
-  val player: JsonObject = reply.getPlayer
+  val player: JsonObject = try {
+    reply.getPlayer
+  } catch {
+    case _: Exception => null
+  }
 
   // Contains the messages to be printed to the console.
   val lines: ListBuffer[String] = new ListBuffer[String]
@@ -94,68 +102,6 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
       } catch {
         case _: NullPointerException => "\u00a7cHidden"
       })
-    }
-  }
-
-  /**
-   * Saves stats value into line buffer in a key-value format.
-   */
-  private def saveStatsToBuffer(name: String, value: Any): Unit = {
-    if (value == null) return
-    if (value.isInstanceOf[String] && value.toString.isEmpty) return
-
-    def f[T](v: T) = v match {
-      case _: String => '7'
-      case _: Number => 'e'
-      case b: Boolean => if (b) 'a' else 'c'
-      case j: JsonElement =>
-        val jp = j.getAsJsonPrimitive
-        if (jp.isBoolean) {
-          if (jp.getAsBoolean) 'a' else 'c'
-        }
-        else if (jp.isNumber) 'e'
-        else if (jp.isString) '7'
-      case _ => '6'
-    }
-
-    def y(value: String): String = {
-      if (value.contains("/") || value.contains("\u272b")) value
-      else if (value.contains("#")) value
-      else {
-        val digits = "\\d+.\\d+".r.unanchored
-        val t = digits.replaceAllIn(value, m =>
-          if (m.group(0) contains ".") {
-            val formatter = java.text.NumberFormat.getInstance
-            formatter.format(m.group(0).toDouble)
-          }
-          else f"${m.group(0).toInt}%,d"
-        )
-        t
-      }
-    }
-
-    val statColour = s"\u00a7${f(value)}"
-    val done = try { y(value.toString) } catch { case _: Throwable => value.toString }
-    lines.append(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$done"}")
-  }
-
-  /**
-   * Prints the first line showing the name/guild of the player.
-   */
-  private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false, status: Boolean = false): Unit = {
-    val rank = try Utils.getRank(player)
-    catch {
-      case e: Exception => e.printStackTrace(); ""
-    }
-
-    val name: String = if (rank.endsWith("]")) rank + " " + player.get("displayname").getAsString
-    else rank + player.get("displayname").getAsString
-
-    if (compact) lines.append(name)
-    else {
-      val str =
-        if (game == "" && !guild) "Stats" else if (guild) "Guild" else if (status) "Online status" else s"$game stats"
-      lines.append(s"$str of $name")
     }
   }
 
@@ -491,17 +437,15 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         val okdr = Utils.roundDouble(sw.getStatsAsDouble("kills") / sw.getStatsAsInt("deaths", one = true))
         if (compact) {
           saveStatsToBuffer("Level", swLevel)
-          saveStatsToBuffer("sWLR", swlr)
-          saveStatsToBuffer("oWLR", owlr)
-          saveStatsToBuffer("sKDR", skdr)
-          saveStatsToBuffer("oKDR", okdr)
+          saveStatsToBuffer("WLR", owlr)
+          saveStatsToBuffer("KDR", okdr)
         } else {
           saveStatsToBuffer("SkyWars Level", swLevel)
-          saveStatsToBuffer("Kills", sw.getStatsAsInt("kills"))
-          saveStatsToBuffer("Deaths", sw.getStatsAsInt("deaths"))
+          saveStatsToBuffer("K | D", sw.getStatsAsInt("kills") + " | " + sw.getStatsAsInt("deaths"))
+          saveStatsToBuffer("Solo KDR", skdr)
           saveStatsToBuffer("Overall KDR", okdr)
-          saveStatsToBuffer("Wins", sw.getStatsAsInt("wins"))
-          saveStatsToBuffer("Losses", sw.getStatsAsInt("losses"))
+          saveStatsToBuffer("W | L", sw.getStatsAsInt("wins") + " | " + sw.getStatsAsInt("losses"))
+          saveStatsToBuffer("Solo WLR", swlr)
           saveStatsToBuffer("Overall WLR", owlr)
           saveStatsToBuffer("Winstreak", sw.getStatsAsInt("win_streak"))
           saveStatsToBuffer("Coins", sw.getStatsAsInt("coins"))
@@ -757,6 +701,72 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           "megawalls", "murdermystery", "pit", "status", "guild"
         ).foreach { it => Utils.put(s"\u00a78- \u00a7a$it") }
         Utils.breakLine()
+    }
+  }
+
+  /**
+   * Saves stats value into line buffer in a key-value format.
+   */
+  private def saveStatsToBuffer(name: String, value: Any): Unit = {
+    if (value == null) return
+    if (value.isInstanceOf[String] && value.toString.isEmpty) return
+
+    def f[T](v: T) = v match {
+      case _: String => '7'
+      case _: Number => 'e'
+      case b: Boolean => if (b) 'a' else 'c'
+      case j: JsonElement =>
+        val jp = j.getAsJsonPrimitive
+        if (jp.isBoolean) {
+          if (jp.getAsBoolean) 'a' else 'c'
+        }
+        else if (jp.isNumber) 'e'
+        else if (jp.isString) '7'
+      case _ => '6'
+    }
+
+    def y(value: String): String = {
+      if (value.contains("/") || value.contains("\u272b")) value
+      else if (value.contains("#")) value
+      else {
+        val digits = "\\d+.\\d+".r.unanchored
+        val t = digits.replaceAllIn(value, m =>
+          if (m.group(0) contains ".") {
+            val formatter = java.text.NumberFormat.getInstance
+            formatter.format(m.group(0).toDouble)
+          }
+          else f"${m.group(0).toInt}%,d"
+        )
+        t
+      }
+    }
+
+    val statColour = s"\u00a7${f(value)}"
+    val done = try {
+      y(value.toString)
+    } catch {
+      case _: Throwable => value.toString
+    }
+    lines.append(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$done"}")
+  }
+
+  /**
+   * Prints the first line showing the name/guild of the player.
+   */
+  private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false, status: Boolean = false): Unit = {
+    val rank = try Utils.getRank(player)
+    catch {
+      case e: Exception => e.printStackTrace(); ""
+    }
+
+    val name: String = if (rank.endsWith("]")) rank + " " + player.get("displayname").getAsString
+    else rank + player.get("displayname").getAsString
+
+    if (compact) lines.append(name)
+    else {
+      val str =
+        if (game == "" && !guild) "Stats" else if (guild) "Guild" else if (status) "Online status" else s"$game stats"
+      lines.append(s"$str of $name")
     }
   }
 }
