@@ -102,6 +102,12 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
       } catch {
         case _: NullPointerException => "\u00a7cHidden"
       })
+      val uuid = player.get("uuid").getAsString
+      if (Storage.contributors.contains(uuid)) {
+        saveStatsToBuffer("Mod Contributor", true)
+      } else if (Storage.cuties.contains(uuid)) {
+        saveStatsToBuffer("Cutie \u2764", "\u00a7dtrue")
+      }
     }
   }
 

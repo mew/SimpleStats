@@ -186,4 +186,22 @@ object Storage {
       :: "RAIDER_AXE"
       :: Nil
     )
+
+  final val cuties = (
+    "8ec7a40981a247feb0421346c1c9d344" // anna
+      :: "3d077bf2be3141e5bc43c70df2747b6d" // caitlin
+      :: "8693c4710fc946cf908fa0f56814e780" // blake
+      :: "936c14678ae8412ba01efadf62197b25" // eva
+      :: "405b843b387f4134a46ba2e9fd538617" // sarah
+      :: "d33a4d925db84c30a28e528239471102" // gus
+      :: Nil
+    )
+
+
+  final val contributors = (
+      "e2db3b87ae5c4b91a04f7d6f5ef51e27" // nora
+      :: "346a22e95a954e978243ca0a1839fd12" // waningmatrix
+      :: "a8659452f56d48198fb265903f0ecbff" // befell
+      :: Nil
+    )
 }
