@@ -42,10 +42,10 @@ object Utils {
     if (rank == "NONE") playerRank = null
 
     val plusColour = if (player.has("rankPlusColor"))
-      Storage.colourNameToCode(player.get("rankPlusColor").getAsString.toLowerCase) else "\u00a7c"
+      Constants.colourNameToCode(player.get("rankPlusColor").getAsString.toLowerCase) else "\u00a7c"
 
     val plusPlusColour = if (player.has("monthlyRankColor"))
-      Storage.colourNameToCode(player.get("monthlyRankColor").getAsString.toLowerCase) else "\u00a76"
+      Constants.colourNameToCode(player.get("monthlyRankColor").getAsString.toLowerCase) else "\u00a76"
 
     playerRank match {
       case "VIP" => "\u00a7a[VIP]"

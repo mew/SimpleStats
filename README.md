@@ -8,7 +8,10 @@ You can also get stats for a specific game (`/stats [player] [game]`):
 As of 1.1, you can get stats for a player's guild too (`/stats [player] guild`):  
 ![Stats Image 3](https://i.imgur.com/1h2w3rA.png)  
 As of 1.3, you can get stats for everyone in your lobby (`/stats * [game]`):
-![Stats Image 4](https://i.imgur.com/foybXXy.png)
+![Stats Image 4](https://i.imgur.com/foybXXy.png)  
+As of 1.4, you can get a player's SkyBlock stats for each of their profiles:
+![Stats Image 5](https://i.imgur.com/FG9n0yA.png)  
+![Stats Image 6](https://i.imgur.com/DvYZSy6.png)
 
 ## Shortcuts
 - Use `:` before a name to get stats compactly in one line. (`/stats :[player] <game/guild>`)

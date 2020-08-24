@@ -6,10 +6,12 @@ import java.sql.Timestamp
 import com.google.gson.JsonObject
 import net.hypixel.api.HypixelAPI
 import net.hypixel.api.reply.PlayerReply
-import net.hypixel.api.util.ILeveling
-import zone.nora.simplestats.util.{Storage, QuestData, Utils}
+import net.hypixel.api.util.{GameType, ILeveling}
+import zone.nora.simplestats.util.{QuestData, Constants, Utils}
 
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ListBuffer
+import scala.util.control.Breaks.{break, breakable}
 import scala.util.control.NonFatal
 
 /**
@@ -103,9 +105,9 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         case _: NullPointerException => "\u00a7cHidden"
       })
       val uuid = player.get("uuid").getAsString
-      if (Storage.contributors.contains(uuid)) {
+      if (Constants.contributors.contains(uuid)) {
         saveStatsToBuffer("Mod Contributor", true)
-      } else if (Storage.cuties.contains(uuid)) {
+      } else if (Constants.cuties.contains(uuid)) {
         saveStatsToBuffer("Cutie \u2764", "\u00a7dtrue")
       }
     }
@@ -244,8 +246,39 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         }
         firstLine(player, "Build Battle")
         saveStatsToBuffer("Wins", bb.getStatsAsInt("wins"))
-        saveStatsToBuffer("Score", bb.getStatsAsInt("score"))
+        val score = bb.getStatsAsInt("score")
+        saveStatsToBuffer("Score", score)
         if (!compact) {
+          saveStatsToBuffer("Title", score match {
+            case score if 0 to 99 contains score => "\u00a7fRookie"
+            case score if 100 to 249 contains score => "\u00a77Untrained"
+            case score if 250 to 499 contains score => "\u00a7eAmateur"
+            case score if 500 to 999 contains score => "\u00a7aApprentice"
+            case score if 1000 to 1999 contains score => "\u00a7dExperienced"
+            case score if 2000 to 3499 contains score => "\u00a79Experienced"
+            case score if 3500 to 4999 contains score => "\u00a72Trained"
+            case score if 5000 to 7499 contains score => "\u00a73Skilled"
+            case score if 7500 to 9999 contains score => "\u00a7cTalented"
+            case score if 10000 to 14999 contains score => "\u00a75Professional"
+            case score if 15000 to 19999 contains score => "\u00a71Expert"
+            case _ =>
+              val leaderboardsReply = api.getLeaderboards.get()
+              var title = "\u00a74Master"
+              if (leaderboardsReply.isSuccess) {
+                try {
+                  leaderboardsReply.getLeaderboards.get(GameType.BUILD_BATTLE).foreach { it =>
+                    if (it.getTitle == "Score") {
+                      for (i <- 0 to 9) {
+                        val leaderUuid = it.getLeaders.get(i).toString.replace("-", "")
+                        val uuid = player.get("uuid").getAsString
+                        if (leaderUuid == uuid) title = s"\u00a76#${i + 1} Builder"
+                      }
+                    }
+                  }
+                } catch { case NonFatal(e) => e.printStackTrace() }
+              }
+              title
+          })
           saveStatsToBuffer("Coins", bb.getStatsAsInt("coins"))
           saveStatsToBuffer("Games Played", bb.getStatsAsInt("games_played"))
           saveStatsToBuffer("Correct GTB Guesses", bb.getStatsAsInt("correct_guesses"))
@@ -264,6 +297,15 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("KDR", kdr)
           saveStatsToBuffer("WS", duels.getStatsAsInt("current_winstreak"))
         } else {
+          breakable {
+            Constants.duelsDivisions.foreach { it =>
+              val key = s"all_modes_${it._1.toLowerCase()}_title_prestige"
+              if (duels.has(key)) {
+                saveStatsToBuffer("Division", s"\u00a7${it._2}${it._1} ${Constants.romanNumerals(duels.getStatsAsInt(key))}")
+                break
+              }
+            }
+          }
           saveStatsToBuffer("Wins", duels.getStatsAsInt("wins"))
           saveStatsToBuffer("Losses", duels.getStatsAsInt("losses"))
           saveStatsToBuffer("WLR", wlr)
@@ -682,7 +724,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         saveStatsToBuffer("Level", Utils.getGuildLevel(guild.getExp))
         try {
           saveStatsToBuffer("Tag", try {
-            s"${Storage.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]"
+            s"${Constants.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]"
           } catch {
             case _: NullPointerException => s"[${guild.getTag}]"
           })

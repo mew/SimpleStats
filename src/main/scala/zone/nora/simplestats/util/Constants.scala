@@ -5,7 +5,7 @@ import scala.language.postfixOps
 /**
  * data storage object. if the hypixel api were better this wouldn't need to exist :)
  */
-object Storage {
+object Constants {
   final val colourNameToCode = Map(
     "black" -> "\u00a70",
     "dark_green" -> "\u00a72",
@@ -23,6 +23,9 @@ object Storage {
     "yellow" -> "\u00a7e",
     "white" -> "\u00a7f"
   )
+
+  final val romanNumerals =
+    Map(1 -> "I", 2 -> "II", 3 -> "III", 4 -> "IV", 5 -> "V", 6 -> "VI", 7 -> "VII", 8 -> "VIII", 9 -> "IX", 10 -> "X")
 
   final val skillLevels = Map(
     1 -> 50,
@@ -186,6 +189,10 @@ object Storage {
       :: "RAIDER_AXE"
       :: Nil
     )
+
+  final val duelsDivisions =
+    ("Godlike", '5') :: ("Grandmaster", 'e') :: ("Legend", '4') :: ("Master", '2') :: ("Diamond", 'b') :: ("Gold", '6') :: ("Iron", 'f') :: ("Rookie", '8') :: Nil
+
 
   final val cuties = (
     "8ec7a40981a247feb0421346c1c9d344" // anna

@@ -10,8 +10,9 @@ import net.minecraft.command.{CommandBase, ICommandSender}
 import net.minecraft.event.ClickEvent
 import net.minecraft.nbt.{CompressedStreamTools, NBTTagCompound}
 import net.minecraft.util.{ChatComponentText, IChatComponent}
+import net.minecraftforge.fml.common.Loader
 import zone.nora.simplestats.SimpleStats
-import zone.nora.simplestats.util.{ChatComponentBuilder, Storage, Utils}
+import zone.nora.simplestats.util.{ChatComponentBuilder, Constants, Utils}
 
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.mutable.ListBuffer
@@ -52,7 +53,7 @@ class HiddenSkyBlockCommand extends CommandBase {
                   val skillExp = getDouble(member, s"experience_skill_${it.toLowerCase}")
                   var skill = 0
                   var total = 0
-                  val map = if (it == "Runecrafting") (Storage.runecraftingLevels, 25) else (Storage.skillLevels, 50)
+                  val map = if (it == "Runecrafting") (Constants.runecraftingLevels, 25) else (Constants.skillLevels, 50)
                   breakable { for (i <- 1 to map._2) { val j = map._1(i) + total; if (skillExp > j) { skill = i; total = j } else break } }
                   addStatToBuffer(it, skill, if (skill == map._2) '6' else '5')
                   if (map._2 == 50 && it != "Carpentry") skillAvg += skill
@@ -63,12 +64,14 @@ class HiddenSkyBlockCommand extends CommandBase {
                 buffer.append(new ChatComponentText("\u00a7cNo skills found. They may be hidden!"))
               }
 
+              val viewStatBoost = Loader.isModLoaded("StatBoostViewer")
+
               /* armour */
               addBreaklineToBuffer('b')
               addTitleToBuffer("Armour", 'b')
               val armour = getNbtCompound(member.get("inv_armor").getAsJsonObject.get("data").getAsString).getTagList("i", 10)
               val armourMap = Map(0 -> "Boots", 1 -> "Leggings", 2 -> "Chestplate", 3 -> "Helmet")
-              for (i <- 0 to 3) {
+              for (i <- (0 to 3).reverse) {
                 val piece = armour.getCompoundTagAt(i)
                 if (piece.hasNoTags) addStatToBuffer(armourMap(i), "\u00a7cNone", 'b') else {
                   val display = piece.getCompoundTag("tag").getCompoundTag("display")
@@ -79,6 +82,17 @@ class HiddenSkyBlockCommand extends CommandBase {
                     val lore = display.getTagList("Lore", 8)
                     for (j <- 0 until lore.tagCount())
                       sb.append(s"${lore.getStringTagAt(j)}${if (j == lore.tagCount() - 1) "" else "\n"}")
+                  }
+                  if (viewStatBoost) {
+                    val extraAttributes = piece.getCompoundTag("tag").getCompoundTag("ExtraAttributes")
+                    val flags = (extraAttributes.hasKey("baseStatBoostPercentage"), extraAttributes.hasKey("item_tier"))
+                    if (flags._1 || flags._2) {
+                      sb.append("\n")
+                      if (flags._1)
+                        sb.append(s"\n\u00a76Stat Boost Percentage: ${extraAttributes.getInteger("baseStatBoostPercentage")}/50")
+                      if (flags._2)
+                        sb.append(s"\n\u00a76Found on Floor ${extraAttributes.getInteger("item_tier")}")
+                    }
                   }
                   buffer.append(ChatComponentBuilder.of(s"\u00a7b${armourMap(i)}\u00a7r: $pieceName")
                     .setHoverEvent(sb.toString())
@@ -98,7 +112,8 @@ class HiddenSkyBlockCommand extends CommandBase {
                       val item = invContents.getCompoundTagAt(i)
                       if (item.hasNoTags) break else {
                         val tag = item.getCompoundTag("tag")
-                        if (Storage.weapons.contains(tag.getCompoundTag("ExtraAttributes").getString("id")) || item.getInteger("id") == 346) {
+                        val extraAttributes = tag.getCompoundTag("ExtraAttributes")
+                        if (Constants.weapons.contains(extraAttributes.getString("id")) || item.getInteger("id") == 346) {
                           val display = tag.getCompoundTag("display")
                           val name = display.getString("Name")
                           val sb = new StringBuilder
@@ -107,6 +122,16 @@ class HiddenSkyBlockCommand extends CommandBase {
                             val lore = display.getTagList("Lore", 8)
                             for (j <- 0 until lore.tagCount())
                               sb.append(s"${lore.getStringTagAt(j)}${if (j == lore.tagCount() - 1) "" else "\n"}")
+                          }
+                          if (viewStatBoost) {
+                            val flags = (extraAttributes.hasKey("baseStatBoostPercentage"), extraAttributes.hasKey("item_tier"))
+                            if (flags._1 || flags._2) {
+                              sb.append("\n")
+                              if (flags._1)
+                                sb.append(s"\n\u00a76Stat Boost Percentage: ${extraAttributes.getInteger("baseStatBoostPercentage")}/50")
+                              if (flags._2)
+                                sb.append(s"\n\u00a76Found on Floor ${extraAttributes.getInteger("item_tier")}")
+                            }
                           }
                           buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7r$name")
                             .setHoverEvent(sb.toString())
@@ -207,10 +232,10 @@ class HiddenSkyBlockCommand extends CommandBase {
   override def canCommandSenderUseCommand(sender: ICommandSender): Boolean = true
 
   private def getDouble(jsonObject: JsonObject, name: String): Double =
-    try { jsonObject.get(name).getAsDouble } catch { case NonFatal(_) => 0.0 }
+    try jsonObject.get(name).getAsDouble catch { case NonFatal(_) => 0.0 }
 
   private def getInt(jsonObject: JsonObject, name: String): Int =
-    try { jsonObject.get(name).getAsInt } catch { case NonFatal(_) => 0 }
+    try jsonObject.get(name).getAsInt catch { case NonFatal(_) => 0 }
 
   private def addStatToBuffer(name: String, value: Any, colour: Char = 'f'): Unit = {
     if (value == null) return
