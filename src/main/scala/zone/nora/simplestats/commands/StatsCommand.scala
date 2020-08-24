@@ -7,9 +7,10 @@ import java.util.regex.Pattern
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
 import net.minecraft.command.{CommandBase, ICommandSender}
+import net.minecraft.event.ClickEvent
 import zone.nora.simplestats.SimpleStats
-import zone.nora.simplestats.core.Stats
-import zone.nora.simplestats.util.{PlayerInfo, Utils}
+import zone.nora.simplestats.core.{Stats, StatsManager}
+import zone.nora.simplestats.util.{ChatComponentBuilder, PlayerInfo, Utils}
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -85,7 +86,34 @@ class StatsCommand extends CommandBase {
           if (stat.player == null) Utils.error(s"Invalid player: $name")
           else {
             if (args.length == 1) stat.saveStats()
-            else stat.saveStats(args(1))
+            else if (args(1) == "sb" || args(1) == "skyblock") {
+              if (stat.player.has("stats")) {
+                val skyblock = new StatsManager(stat.player, "SkyBlock")
+                if (skyblock == null || !stat.player.get("stats").getAsJsonObject.has("SkyBlock")) {
+                  api.shutdown()
+                  Utils.error(s"${stat.player.get("playername").getAsString} has no SkyBlock stats.", prefix = true)
+                  return
+                }
+                Utils.breakLine()
+                val profiles = skyblock.stats.get("profiles").getAsJsonObject
+                Utils.put("Click the profile name to view it's stats:")
+                profiles.entrySet().foreach { it =>
+                  val profile = it.getValue.getAsJsonObject
+                  val cuteName = profile.get("cute_name").getAsString
+                  val id = it.getKey
+                  Minecraft.getMinecraft.thePlayer.addChatMessage(
+                    ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7a$cuteName")
+                      .setClickEvent(ClickEvent.Action.RUN_COMMAND, "/$skyblock_stats " + s"$id ${stat.player.get("uuid").getAsString}")
+                      .setHoverEvent(s"Click to view $cuteName (id: $id).")
+                      .build()
+                  )
+                }
+                Utils.breakLine()
+              } else {
+                stat.firstLine(stat.player, "SkyBlock")
+                stat.lines.append("\u00a7cNo stats found.")
+              }
+            } else stat.saveStats(args(1))
             stat.printStats()
           }
         }

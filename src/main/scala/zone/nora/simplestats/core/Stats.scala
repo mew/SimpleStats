@@ -3,11 +3,11 @@ package zone.nora.simplestats.core
 import java.math.BigInteger
 import java.sql.Timestamp
 
-import com.google.gson.{JsonElement, JsonObject}
+import com.google.gson.JsonObject
 import net.hypixel.api.HypixelAPI
 import net.hypixel.api.reply.PlayerReply
 import net.hypixel.api.util.ILeveling
-import zone.nora.simplestats.util.{QuestData, Utils}
+import zone.nora.simplestats.util.{Storage, QuestData, Utils}
 
 import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
@@ -676,7 +676,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         saveStatsToBuffer("Level", Utils.getGuildLevel(guild.getExp))
         try {
           saveStatsToBuffer("Tag", try {
-            s"${Utils.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]"
+            s"${Storage.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]"
           } catch {
             case _: NullPointerException => s"[${guild.getTag}]"
           })
@@ -708,50 +708,13 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
   private def saveStatsToBuffer(name: String, value: Any): Unit = {
     if (value == null) return
     if (value.isInstanceOf[String] && value.toString.isEmpty) return
-
-    def f[T](v: T) = v match {
-      case _: String => '7'
-      case _: Number => 'e'
-      case b: Boolean => if (b) 'a' else 'c'
-      case j: JsonElement =>
-        val jp = j.getAsJsonPrimitive
-        if (jp.isBoolean) {
-          if (jp.getAsBoolean) 'a' else 'c'
-        }
-        else if (jp.isNumber) 'e'
-        else if (jp.isString) '7'
-      case _ => '6'
-    }
-
-    def y(value: String): String = {
-      if (value.contains("/") || value.contains("\u272b")) value
-      else if (value.contains("#")) value
-      else {
-        val digits = "\\d+.\\d+".r.unanchored
-        val t = digits.replaceAllIn(value, m =>
-          if (m.group(0) contains ".") {
-            val formatter = java.text.NumberFormat.getInstance
-            formatter.format(m.group(0).toDouble)
-          }
-          else f"${m.group(0).toInt}%,d"
-        )
-        t
-      }
-    }
-
-    val statColour = s"\u00a7${f(value)}"
-    val done = try {
-      y(value.toString)
-    } catch {
-      case _: Throwable => value.toString
-    }
-    lines.append(s"$name: ${if (value == null) "\u00a7cN/A" else s"$statColour$done"}")
+    lines.append(Utils.formatStat(name, value))
   }
 
   /**
    * Prints the first line showing the name/guild of the player.
    */
-  private def firstLine(player: JsonObject, game: String = "", guild: Boolean = false, status: Boolean = false): Unit = {
+  def firstLine(player: JsonObject, game: String = "", guild: Boolean = false, status: Boolean = false): Unit = {
     val rank = try Utils.getRank(player)
     catch {
       case e: Exception => e.printStackTrace(); ""

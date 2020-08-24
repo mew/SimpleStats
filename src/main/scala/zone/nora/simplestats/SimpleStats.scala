@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
 import org.apache.commons.io.FileUtils
 import org.apache.logging.log4j.{LogManager, Logger}
+import zone.nora.simplestats.commands.hidden.HiddenSkyBlockCommand
 import zone.nora.simplestats.commands.{SetKeyCommand, StatsCommand}
 import zone.nora.simplestats.listener.EventListener
 import zone.nora.simplestats.util.Utils
@@ -26,6 +27,7 @@ object SimpleStats {
   def init(e: FMLInitializationEvent): Unit = {
     ClientCommandHandler.instance.registerCommand(new SetKeyCommand)
     ClientCommandHandler.instance.registerCommand(new StatsCommand)
+    ClientCommandHandler.instance.registerCommand(new HiddenSkyBlockCommand)
 
     new Thread(new Runnable {
       override def run(): Unit = {

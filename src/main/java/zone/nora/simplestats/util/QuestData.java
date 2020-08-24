@@ -14,8 +14,7 @@ public class QuestData {
 
     public static int getData(JsonObject quests) {
         if (quests == null) return 0;
-        Map<String, QuestData> map = new Gson().fromJson(quests, new TypeToken<Map<String, QuestData>>() {
-        }.getType());
+        Map<String, QuestData> map = new Gson().fromJson(quests, new TypeToken<Map<String, QuestData>>() {}.getType());
         return map.values().stream().mapToInt(it -> it.completions.size()).sum();
     }
 }

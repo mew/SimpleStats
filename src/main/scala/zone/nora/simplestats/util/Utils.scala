@@ -3,11 +3,11 @@ package zone.nora.simplestats.util
 import java.io.{BufferedReader, InputStreamReader}
 import java.net.URL
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.text.{NumberFormat, SimpleDateFormat}
 import java.util.regex.Pattern
 import java.util.{Date, UUID}
 
-import com.google.gson.JsonObject
+import com.google.gson.{JsonElement, JsonObject}
 import net.hypixel.api.HypixelAPI
 import net.minecraft.client.Minecraft
 import net.minecraft.util.ChatComponentText
@@ -17,24 +17,6 @@ object Utils {
   private final val PREFIX = "\u00a79[\u00a76SS\u00a79] \u00a7f"
   private final val VERSION_URL = new URL("https://raw.githubusercontent.com/mew/simplestats/master/version.txt")
   private final val MINECRAFT = Minecraft.getMinecraft
-
-  val colourNameToCode = Map(
-    "black" -> "\u00a70",
-    "dark_green" -> "\u00a72",
-    "dark_aqua" -> "\u00a73",
-    "dark_red" -> "\u00a74",
-    "dark_purple" -> "\u00a75",
-    "gold" -> "\u00a76",
-    "gray" -> "\u00a77",
-    "dark_gray" -> "\u00a78",
-    "blue" -> "\u00a79",
-    "green" -> "\u00a7a",
-    "aqua" -> "\u00a7b",
-    "red" -> "\u00a7c",
-    "light_purple" -> "\u00a7d",
-    "yellow" -> "\u00a7e",
-    "white" -> "\u00a7f"
-  )
 
   def validateKey(apiKey: String): Boolean = try {
     val api = new HypixelAPI(UUID.fromString(apiKey))
@@ -60,10 +42,10 @@ object Utils {
     if (rank == "NONE") playerRank = null
 
     val plusColour = if (player.has("rankPlusColor"))
-      colourNameToCode(player.get("rankPlusColor").getAsString.toLowerCase) else "\u00a7c"
+      Storage.colourNameToCode(player.get("rankPlusColor").getAsString.toLowerCase) else "\u00a7c"
 
     val plusPlusColour = if (player.has("monthlyRankColor"))
-      colourNameToCode(player.get("monthlyRankColor").getAsString.toLowerCase) else "\u00a76"
+      Storage.colourNameToCode(player.get("monthlyRankColor").getAsString.toLowerCase) else "\u00a76"
 
     playerRank match {
       case "VIP" => "\u00a7a[VIP]"
@@ -140,12 +122,48 @@ object Utils {
     val dashes = new StringBuilder
     val dash = Math.floor((280 * MINECRAFT.gameSettings.chatWidth + 40) / 320 * (1 / MINECRAFT.gameSettings.chatScale) * 53).toInt - 3
     for (i <- 1 to dash)
-      if (i == (dash / 2)) dashes.append("\u00a79[\u00a76SS\u00a79]\u00a79\u00a7m") else dashes.append("-")
+      if (i == (dash / 2)) dashes.append("\u00a79[\u00a76SS\u00a79]\u00a7m") else dashes.append("-")
     MINECRAFT.thePlayer.addChatMessage(new ChatComponentText(s"\u00a79\u00a7m$dashes"))
   }
 
   def addDashes(uuidString: String): UUID =
     UUID.fromString(Pattern.compile("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})").matcher(uuidString).replaceAll("$1-$2-$3-$4-$5"))
+
+  def formatStat(name: String, value: Any): String = {
+    def f[T](v: T) = v match {
+      case _: String => '7'
+      case _: Number => 'e'
+      case b: Boolean => if (b) 'a' else 'c'
+      case j: JsonElement =>
+        val jp = j.getAsJsonPrimitive
+        if (jp.isBoolean) {
+          if (jp.getAsBoolean) 'a' else 'c'
+        }
+        else if (jp.isNumber) 'e'
+        else if (jp.isString) '7'
+      case _ => '6'
+    }
+
+    def y(value: String): String = {
+      if (value.contains("/") || value.contains("\u272b")) value
+      else if (value.contains("#")) value
+      else {
+        val digits = "\\d+.\\d+".r.unanchored
+        val t = digits.replaceAllIn(value, m =>
+          if (m.group(0) contains ".") {
+            val formatter = NumberFormat.getInstance
+            formatter.format(m.group(0).toDouble)
+          }
+          else f"${m.group(0).toInt}%,d"
+        )
+        t
+      }
+    }
+
+    val statColour = s"\u00a7${f(value)}"
+    val done = try { y(value.toString) } catch { case _: Throwable => value.toString}
+    s"$name\u00a7r: ${if (value == null) "\u00a7cN/A" else s"$statColour$done"}"
+  }
 
   def checkForUpdates(): String = {
     try {
