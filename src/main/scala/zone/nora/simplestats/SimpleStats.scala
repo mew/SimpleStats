@@ -46,25 +46,6 @@ object SimpleStats {
             key = UUID.fromString(parser.getAsJsonObject.get("key").getAsString)
             valid = true
           } else logger.error(s"Invalid Hypixel API key found at ${file.getCanonicalPath}")
-        } else { // TODO Remove this in 1.4
-          val oldConfigFile = new File("apikey.txt")
-          // Grab Hypixel API key from where it was stored in older versions of the mod.
-          if (oldConfigFile.exists) {
-            logger.info("Found old config file.")
-            val apiKey = FileUtils.readFileToString(oldConfigFile)
-            if (Utils.validateKey(apiKey)) {
-              key = UUID.fromString(apiKey)
-              valid = true
-
-              file.createNewFile
-              val jsonObject = new JsonObject
-              jsonObject.addProperty("key", apiKey)
-              FileUtils.writeStringToFile(file, jsonObject.toString)
-              logger.info("Brought over Hypixel API key from old config file.")
-            }
-
-            oldConfigFile.delete()
-          }
         }
 
         if (Utils.checkForUpdates() != VERSION) MinecraftForge.EVENT_BUS.register(new EventListener)
