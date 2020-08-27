@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URI
 import java.util.UUID
 
-import com.google.gson.{JsonObject, JsonParser}
+import com.google.gson.JsonParser
 import net.minecraft.client.Minecraft
 import net.minecraftforge.client.ClientCommandHandler
 import net.minecraftforge.common.MinecraftForge
@@ -25,7 +25,7 @@ import scala.util.control.NonFatal
 
 @Mod(modid = "SimpleStats", name = "SimpleStats", version = SimpleStats.VERSION, modLanguage = "scala")
 object SimpleStats {
-  final val VERSION = "1.4.0" // Current version of SimpleStats
+  final val VERSION = "1.4.1" // Current version of SimpleStats
   final val logger: Logger = LogManager.getLogger("SimpleStats")
   var valid = false // Is the API key valid
   var key: UUID = _ // Hypixel API key in UUID form
