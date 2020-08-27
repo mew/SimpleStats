@@ -105,41 +105,44 @@ class HiddenSkyBlockCommand extends CommandBase {
               addBreaklineToBuffer('d')
               addTitleToBuffer("Weapons", 'd')
               if (member.has("inv_contents")) {
-                val invContents = getNbtCompound(member.get("inv_contents").getAsJsonObject.get("data").getAsString).getTagList("i", 10)
-                for (i <- 0 to 35) {
-                  breakable {
-                    try {
-                      val item = invContents.getCompoundTagAt(i)
-                      if (item.hasNoTags) break else {
-                        val tag = item.getCompoundTag("tag")
-                        val extraAttributes = tag.getCompoundTag("ExtraAttributes")
-                        if (Constants.weapons.contains(extraAttributes.getString("id")) || item.getInteger("id") == 346) {
-                          val display = tag.getCompoundTag("display")
-                          val name = display.getString("Name")
-                          val sb = new StringBuilder
-                          sb.append(s"$name\n")
-                          if (display.hasKey("Lore")) {
-                            val lore = display.getTagList("Lore", 8)
-                            for (j <- 0 until lore.tagCount())
-                              sb.append(s"${lore.getStringTagAt(j)}${if (j == lore.tagCount() - 1) "" else "\n"}")
-                          }
-                          if (viewStatBoost) {
-                            val flags = (extraAttributes.hasKey("baseStatBoostPercentage"), extraAttributes.hasKey("item_tier"))
-                            if (flags._1 || flags._2) {
-                              sb.append("\n")
-                              if (flags._1)
-                                sb.append(s"\n\u00a76Stat Boost Percentage: ${extraAttributes.getInteger("baseStatBoostPercentage")}/50")
-                              if (flags._2)
-                                sb.append(s"\n\u00a76Found on Floor ${extraAttributes.getInteger("item_tier")}")
+                val inventories = ("inv_contents", 35) :: ("ender_chest_contents", 64) :: Nil
+                inventories.foreach { it =>
+                  val invContents = getNbtCompound(member.get(it._1).getAsJsonObject.get("data").getAsString).getTagList("i", 10)
+                  for (i <- 0 to it._2) {
+                    breakable {
+                      try {
+                        val item = invContents.getCompoundTagAt(i)
+                        if (item.hasNoTags) break else {
+                          val tag = item.getCompoundTag("tag")
+                          val extraAttributes = tag.getCompoundTag("ExtraAttributes")
+                          if (Constants.weapons.contains(extraAttributes.getString("id")) || item.getInteger("id") == 346) {
+                            val display = tag.getCompoundTag("display")
+                            val name = display.getString("Name")
+                            val sb = new StringBuilder
+                            sb.append(s"$name\n")
+                            if (display.hasKey("Lore")) {
+                              val lore = display.getTagList("Lore", 8)
+                              for (j <- 0 until lore.tagCount())
+                                sb.append(s"${lore.getStringTagAt(j)}${if (j == lore.tagCount() - 1) "" else "\n"}")
                             }
+                            if (viewStatBoost) {
+                              val flags = (extraAttributes.hasKey("baseStatBoostPercentage"), extraAttributes.hasKey("item_tier"))
+                              if (flags._1 || flags._2) {
+                                sb.append("\n")
+                                if (flags._1)
+                                  sb.append(s"\n\u00a76Stat Boost Percentage: ${extraAttributes.getInteger("baseStatBoostPercentage")}/50")
+                                if (flags._2)
+                                  sb.append(s"\n\u00a76Found on Floor ${extraAttributes.getInteger("item_tier")}")
+                              }
+                            }
+                            buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7r$name")
+                              .setHoverEvent(sb.toString())
+                              .build()
+                            )
                           }
-                          buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7r$name")
-                            .setHoverEvent(sb.toString())
-                            .build()
-                          )
                         }
-                      }
-                    } catch { case NonFatal(_) => }
+                      } catch { case NonFatal(_) => /* nothing */}
+                    }
                   }
                 }
               } else buffer.append(new ChatComponentText("\u00a7cNo inventory found. It may be hidden!"))
@@ -187,9 +190,9 @@ class HiddenSkyBlockCommand extends CommandBase {
               /* bank */
               addBreaklineToBuffer('6')
               addTitleToBuffer("Bank", '6')
-              addStatToBuffer("Coins in Purse", BigDecimal.valueOf(getDouble(member, "coin_purse")), '6')
+              addStatToBuffer("Coins in Purse", BigDecimal.valueOf(getDouble(member, "coin_purse")).setScale(1, BigDecimal.RoundingMode.DOWN), '6')
               if (profile.has("banking")) {
-                addStatToBuffer("Coins in Bank", BigDecimal.valueOf(getDouble(profile.get("banking").getAsJsonObject, "balance")), '6')
+                addStatToBuffer("Coins in Bank", BigDecimal.valueOf(getDouble(profile.get("banking").getAsJsonObject, "balance")).setScale(1, BigDecimal.RoundingMode.DOWN), '6')
               } else {
                 buffer.append(new ChatComponentText("\u00a7cThis profile has it's bank information disabled."))
               }

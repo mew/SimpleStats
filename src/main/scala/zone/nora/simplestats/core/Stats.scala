@@ -736,6 +736,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Legacy Rank", guild.getLegacyRanking)
           saveStatsToBuffer("Created", Utils.parseTime(Timestamp.valueOf(guild.getCreated.toLocalDateTime).getTime))
           saveStatsToBuffer("Members", s"${guild.getMembers.size}/125")
+          saveStatsToBuffer("Description", guild.getDescription)
         }
       case _ =>
         Utils.breakLine()
@@ -744,7 +745,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         List(
           "arcade", "arenabrawl", "warlords", "bedwars", "duels", "tkr", "blitz", "legacy", "cvc", "paintball",
           "quake", "skywars", "skyclash", "speeduhc", "smash", "tnt", "crazywalls", "uhc", "vampirez", "walls",
-          "megawalls", "murdermystery", "pit", "status", "guild"
+          "megawalls", "murdermystery", "pit", "status", "guild", "skyblock"
         ).foreach { it => Utils.put(s"\u00a78- \u00a7a$it") }
         Utils.breakLine()
     }
