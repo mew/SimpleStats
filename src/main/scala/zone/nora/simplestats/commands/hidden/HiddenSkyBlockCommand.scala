@@ -199,9 +199,9 @@ class HiddenSkyBlockCommand extends CommandBase {
 
               /* finish */
               addBreaklineToBuffer()
-              buffer.append(ChatComponentBuilder.of("\u00a73Click to view on \u00a7d\u00a7nsky.lea.moe")
-                .setHoverEvent("Click to open \u00a79https://sky.lea.moe\u00a7r!")
-                .setClickEvent(ClickEvent.Action.OPEN_URL, s"https://sky.lea.moe/stats/$playerUuid/$profileId")
+              buffer.append(ChatComponentBuilder.of("\u00a73Click to view on \u00a7a\u00a7nhttps://sky.shiiyu.moe/")
+                .setHoverEvent("Click to open \u00a79https://sky.shiiyu.moe\u00a7r!")
+                .setClickEvent(ClickEvent.Action.OPEN_URL, s"https://sky.shiiyu.moe/stats/$playerUuid/$profileId")
                 .build()
               )
               buffer.append(ChatComponentBuilder.of("\u00a73Click to view on \u00a7e\u00a7nskyblock.matdoes.dev")
