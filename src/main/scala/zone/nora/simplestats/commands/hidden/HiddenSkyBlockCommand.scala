@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.Loader
 import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.util.{ChatComponentBuilder, Constants, Utils}
 
-import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConversions.{asScalaSet, iterableAsScalaIterable}
 import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks.{break, breakable}
 import scala.util.control.NonFatal
@@ -53,7 +53,7 @@ class HiddenSkyBlockCommand extends CommandBase {
                   val skillExp = getDouble(member, s"experience_skill_${it.toLowerCase}")
                   var skill = 0
                   var total = 0
-                  val map = if (it == "Runecrafting") (Constants.runecraftingLevels, 25) else (Constants.skillLevels, 50)
+                  val map = if (it == "Runecrafting") (Constants.RUNECRAFTING_LEVELS, 25) else (Constants.SKILL_LEVELS, 50)
                   breakable { for (i <- 1 to map._2) { val j = map._1(i) + total; if (skillExp > j) { skill = i; total = j } else break } }
                   addStatToBuffer(it, skill, if (skill == map._2) '6' else '5')
                   if (map._2 == 50 && it != "Carpentry") skillAvg += skill
@@ -115,7 +115,7 @@ class HiddenSkyBlockCommand extends CommandBase {
                         if (item.hasNoTags) break else {
                           val tag = item.getCompoundTag("tag")
                           val extraAttributes = tag.getCompoundTag("ExtraAttributes")
-                          if (Constants.weapons.contains(extraAttributes.getString("id")) || item.getInteger("id") == 346) {
+                          if (Constants.WEAPONS.contains(extraAttributes.getString("id")) || item.getInteger("id") == 346) {
                             val display = tag.getCompoundTag("display")
                             val name = display.getString("Name")
                             val sb = new StringBuilder
@@ -146,6 +146,42 @@ class HiddenSkyBlockCommand extends CommandBase {
                   }
                 }
               } else buffer.append(new ChatComponentText("\u00a7cNo inventory found. It may be hidden!"))
+
+              /* pets */
+              addBreaklineToBuffer('7')
+              addTitleToBuffer("Pets", '7')
+              try {
+                if (member.has("pets")) {
+                  val pets = new ListBuffer[SkyblockPet]
+                  var activePet: SkyblockPet = null
+                  member.get("pets").getAsJsonArray.foreach { obj =>
+                    val petObj = obj.getAsJsonObject
+                    val pet = SkyblockPet(
+                      petObj.get("type").getAsString,
+                      getDouble(petObj, "exp"),
+                      petObj.get("tier").getAsString.toLowerCase
+                    )
+                    if (petObj.get("active").getAsBoolean) activePet = pet else pets.append(pet)
+                  }
+                  // TODO have pet info on hover.
+                  if (activePet != null) buffer.append(new ChatComponentText(s"  \u00a78\u27a4 \u00a7r${activePet.getFormattedName}\u00a7a\u00a7l - ACTIVE PET"))
+                  val pets_ = pets.sortBy(it => it.exp).reverse
+                  if (pets.size < 10)
+                    pets_.foreach(it => buffer.append(new ChatComponentText(s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}")))
+                  else {
+                    pets_.slice(0, 9).foreach(it => buffer.append(new ChatComponentText(s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}")))
+                    var morePets = ""
+                    pets_.slice(9, pets.size).foreach(it => morePets += s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}\n")
+                    buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7cAnd ${pets.size - 10} more..").setHoverEvent(morePets).build())
+                  }
+                } else buffer.append(new ChatComponentText("\u00a7cNo pets found."))
+              } catch { case NonFatal(_) => /* nothing */ }
+
+              /* pet milestones */
+              buffer.append(new ChatComponentText(""))
+              addTitleToBuffer("Pet Milestones", '7')
+              addStatToBuffer("Sea Creatures Killed", getInt(stats, "pet_milestone_sea_creatures_killed"), '7')
+              addStatToBuffer("Ores Mined", getInt(stats, "pet_milestone_ores_mined"), '7')
 
               /* slayer */
               addBreaklineToBuffer('2')
@@ -179,12 +215,6 @@ class HiddenSkyBlockCommand extends CommandBase {
               } else {
                 buffer.append(new ChatComponentText("\u00a7cNo Slayer information found."))
               }
-
-              /* pet milestones */
-              addBreaklineToBuffer('7')
-              addTitleToBuffer("Pet Milestones", '7')
-              addStatToBuffer("Sea Creatures Killed", getInt(stats, "pet_milestone_sea_creatures_killed"), '7')
-              addStatToBuffer("Ores Mined", getInt(stats, "pet_milestone_ores_mined"), '7')
 
 
               /* bank */
@@ -261,5 +291,50 @@ class HiddenSkyBlockCommand extends CommandBase {
   private def getNbtCompound(compressed: String): NBTTagCompound = {
     val inputStream = new ByteArrayInputStream(Base64.getDecoder.decode(compressed))
     CompressedStreamTools.readCompressed(inputStream)
+  }
+
+  private case class SkyblockPet(private val name: String, val exp: Double, private val tier: String) {
+    private val offset: Int = tier match {
+      case "uncommon" => 5
+      case "rare" => 10
+      case "epic" => 15
+      case "legendary" => 19
+      case _ => 0
+    }
+
+    private def calculateLevel(): Int = {
+      var totalExp = 0
+      var lvl = 0
+      breakable {
+        for (i <- offset to offset + 100) {
+          lvl = i - offset
+          val j = try { Constants.PET_LEVELS(i) } catch { case NonFatal(_) => 0 }
+          totalExp += j
+          if (totalExp > exp) break
+        }
+      }
+      lvl
+    }
+
+    private def formatUpperSnake(str: String): String = {
+      // TODO make this better
+      var str_ = str.toLowerCase
+      str_ = str_.replaceFirst(str_.charAt(0).toString, str_.charAt(0).toUpper.toString)
+      while (str_.contains("_"))
+        str_ = str_.replaceFirst("_[a-z]", " " + Character.toUpperCase(str_.charAt(str_.indexOf("_") + 1)))
+
+      str_
+    }
+
+    def getFormattedName: String = {
+      val colour = tier match {
+        case "uncommon" => 'a'
+        case "rare" => '9'
+        case "epic" => '5'
+        case "legendary" => '6'
+        case _ => 'f'
+      }
+      s"\u00a77[Lvl ${calculateLevel()}] \u00a7$colour${formatUpperSnake(name)}"
+    }
   }
 }

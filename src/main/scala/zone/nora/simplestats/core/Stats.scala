@@ -105,9 +105,9 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         case _: NullPointerException => "\u00a7cHidden"
       })
       val uuid = player.get("uuid").getAsString
-      if (Constants.contributors.contains(uuid)) {
+      if (Constants.CONTRIBUTORS.contains(uuid)) {
         saveStatsToBuffer("Mod Contributor", true)
-      } else if (Constants.cuties.contains(uuid)) {
+      } else if (Constants.CUTIES.contains(uuid)) {
         saveStatsToBuffer("Cutie \u2764", "\u00a7dtrue")
       }
     }
@@ -298,7 +298,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("WS", duels.getStatsAsInt("current_winstreak"))
         } else {
           breakable {
-            Constants.duelsDivisions.foreach { it =>
+            Constants.DUELS_DIVISIONS.foreach { it =>
               val key = s"all_modes_${it._1.toLowerCase()}_title_prestige"
               if (duels.has(key)) {
                 saveStatsToBuffer("Division", s"\u00a7${it._2}${it._1} ${Constants.romanNumerals(duels.getStatsAsInt(key))}")
@@ -497,6 +497,10 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Coins", sw.getStatsAsInt("coins"))
           saveStatsToBuffer("Souls", sw.getStatsAsInt("souls"))
           saveStatsToBuffer("Heads", sw.getStatsAsInt("heads"))
+          saveStatsToBuffer("shard", sw.getStatsAsInt("shard"))
+          saveStatsToBuffer("shard_solo", sw.getStatsAsInt("shard_solo"))
+          saveStatsToBuffer("shard_team", sw.getStatsAsInt("shard_team"))
+          saveStatsToBuffer("opals", sw.getStatsAsInt("opals"))
         }
       case "sc" | "skyclash" => // Not really maintained due to its removal
         val sc = new StatsManager(player, "SkyClash")
@@ -724,7 +728,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         saveStatsToBuffer("Level", Utils.getGuildLevel(guild.getExp))
         try {
           saveStatsToBuffer("Tag", try {
-            s"${Constants.colourNameToCode(guild.getTagColor.toLowerCase)}[${guild.getTag}]"
+            s"${Constants.COLOUR_NAME_TO_CODE(guild.getTagColor.toLowerCase)}[${guild.getTag}]"
           } catch {
             case _: NullPointerException => s"[${guild.getTag}]"
           })

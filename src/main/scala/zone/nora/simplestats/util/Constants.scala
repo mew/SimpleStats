@@ -6,7 +6,7 @@ import scala.language.postfixOps
  * data storage object. if the hypixel api were better this wouldn't need to exist :)
  */
 object Constants {
-  final val colourNameToCode = Map(
+  final val COLOUR_NAME_TO_CODE = Map(
     "black" -> "\u00a70",
     "dark_green" -> "\u00a72",
     "dark_aqua" -> "\u00a73",
@@ -27,7 +27,7 @@ object Constants {
   final val romanNumerals =
     Map(1 -> "I", 2 -> "II", 3 -> "III", 4 -> "IV", 5 -> "V", 6 -> "VI", 7 -> "VII", 8 -> "VIII", 9 -> "IX", 10 -> "X")
 
-  final val skillLevels = Map(
+  final val SKILL_LEVELS = Map(
     1 -> 50,
     2 -> 125,
     3 -> 200,
@@ -80,7 +80,7 @@ object Constants {
     50 -> 4000000
   )
 
-  final val runecraftingLevels = Map(
+  final val RUNECRAFTING_LEVELS = Map(
     1 -> 50,
     2 -> 100,
     3 -> 125,
@@ -108,7 +108,7 @@ object Constants {
     25 -> 19050
   )
 
-  final val weapons = (
+  final val WEAPONS = (
     "REVENANT_SWORD"
       :: "FANCY_SWORD"
       :: "HURRICANE_BOW"
@@ -190,11 +190,131 @@ object Constants {
       :: Nil
     )
 
-  final val duelsDivisions =
+  final val PET_LEVELS: List[Int] = List(100,
+      110,
+      120,
+      130,
+      145,
+      160,
+      175,
+      190,
+      210,
+      230,
+      250,
+      275,
+      300,
+      330,
+      360,
+      400,
+      440,
+      490,
+      540,
+      600,
+      660,
+      730,
+      800,
+      880,
+      960,
+      1050,
+      1150,
+      1260,
+      1380,
+      1510,
+      1650,
+      1800,
+      1960,
+      2130,
+      2310,
+      2500,
+      2700,
+      2920,
+      3160,
+      3420,
+      3700,
+      4000,
+      4350,
+      4750,
+      5200,
+      5700,
+      6300,
+      7000,
+      7800,
+      8700,
+      9700,
+      10800,
+      12000,
+      13300,
+      14700,
+      16200,
+      17800,
+      19500,
+      21300,
+      23200,
+      25200,
+      27400,
+      29800,
+      32400,
+      35200,
+      38200,
+      41400,
+      44800,
+      48400,
+      52200,
+      56200,
+      60400,
+      64800,
+      69400,
+      74200,
+      79200,
+      84700,
+      90700,
+      97200,
+      104200,
+      111700,
+      119700,
+      128200,
+      137200,
+      146700,
+      156700,
+      167700,
+      179700,
+      192700,
+      206700,
+      221700,
+      237700,
+      254700,
+      272700,
+      291700,
+      311700,
+      333700,
+      357700,
+      383700,
+      411700,
+      441700,
+      476700,
+      516700,
+      561700,
+      611700,
+      666700,
+      726700,
+      791700,
+      861700,
+      936700,
+      1016700,
+      1101700,
+      1191700,
+      1286700,
+      1386700,
+      1496700,
+      1616700,
+      1746700,
+      1886700)
+
+  final val DUELS_DIVISIONS =
     ("Godlike", '5') :: ("Grandmaster", 'e') :: ("Legend", '4') :: ("Master", '2') :: ("Diamond", 'b') :: ("Gold", '6') :: ("Iron", 'f') :: ("Rookie", '8') :: Nil
 
 
-  final val cuties = (
+  final val CUTIES = (
     "8ec7a40981a247feb0421346c1c9d344" // anna
       :: "3d077bf2be3141e5bc43c70df2747b6d" // caitlin
       :: "8693c4710fc946cf908fa0f56814e780" // blake
@@ -205,7 +325,7 @@ object Constants {
     )
 
 
-  final val contributors = (
+  final val CONTRIBUTORS = (
       "e2db3b87ae5c4b91a04f7d6f5ef51e27" // nora
       :: "346a22e95a954e978243ca0a1839fd12" // waningmatrix
       :: "a8659452f56d48198fb265903f0ecbff" // befell
