@@ -497,10 +497,10 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Coins", sw.getStatsAsInt("coins"))
           saveStatsToBuffer("Souls", sw.getStatsAsInt("souls"))
           saveStatsToBuffer("Heads", sw.getStatsAsInt("heads"))
-          saveStatsToBuffer("shard", sw.getStatsAsInt("shard"))
-          saveStatsToBuffer("shard_solo", sw.getStatsAsInt("shard_solo"))
-          saveStatsToBuffer("shard_team", sw.getStatsAsInt("shard_team"))
-          saveStatsToBuffer("opals", sw.getStatsAsInt("opals"))
+          saveStatsToBuffer("Shards", s"${sw.getStatsAsInt("shard")}/20000")
+          saveStatsToBuffer("Opals", sw.getStatsAsInt("opals"))
+          val totalShards = sw.getStatsAsInt("shard_solo") + sw.getStatsAsInt("shard_team")
+          saveStatsToBuffer("Total Opals", totalShards / 20000)
         }
       case "sc" | "skyclash" => // Not really maintained due to its removal
         val sc = new StatsManager(player, "SkyClash")
