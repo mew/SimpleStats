@@ -108,88 +108,6 @@ object Constants {
     25 -> 19050
   )
 
-  final val WEAPONS = (
-    "REVENANT_SWORD"
-      :: "FANCY_SWORD"
-      :: "HURRICANE_BOW"
-      :: "UNDEAD_SWORD"
-      :: "INK_WAND"
-      :: "SILK_EDGE_SWORD"
-      :: "SWEET_AXE"
-      :: "SHAMAN_SWORD"
-      :: "YETI_SWORD"
-      :: "UNDEAD_BOW"
-      :: "WOOD_SWORD"
-      :: "RUNAANS_BOW"
-      :: "END_STONE_BOW"
-      :: "BOW"
-      :: "SCULPTORS_AXE"
-      :: "GOLEM_SWORD"
-      :: "PET_ITEM_FORAGING_SKILL_BOOST_COMMON"
-      :: "PRISMARINE_BOW"
-      :: "FLAMING_SWORD"
-      :: "ROGUE_SWORD"
-      :: "PET_ITEM_MINING_SKILL_BOOST_RARE"
-      :: "IRON_AXE"
-      :: "WITHER_BOW"
-      :: "EMBER_ROD"
-      :: "TREECAPITATOR_AXE"
-      :: "ENDER_BOW"
-      :: "MOSQUITO_BOW"
-      :: "CLEAVER"
-      :: "SUPER_CLEAVER"
-      :: "DECENT_BOW"
-      :: "EMERALD_BLADE"
-      :: "PET_ITEM_COMBAT_SKILL_BOOST_UNCOMMON"
-      :: "MIDAS_SWORD"
-      :: "BONZO_STAFF"
-      :: "END_SWORD"
-      :: "ZOMBIE_SWORD"
-      :: "ROOKIE_AXE"
-      :: "JUNGLE_AXE"
-      :: "MAGMA_BOW"
-      :: "DIAMOND_AXE"
-      :: "PET_ITEM_COMBAT_SKILL_BOOST_COMMON"
-      :: "PET_ITEM_FORAGING_SKILL_BOOST_EPIC"
-      :: "EXPLOSIVE_BOW"
-      :: "WOOD_AXE"
-      :: "ASPECT_OF_THE_END"
-      :: "FROZEN_SCYTHE"
-      :: "REAPER_SCYTHE"
-      :: "PRISMARINE_BLADE"
-      :: "TACTICIAN_SWORD"
-      :: "GOLD_SWORD"
-      :: "POOCH_SWORD"
-      :: "SPIDER_SWORD"
-      :: "PET_ITEM_MINING_SKILL_BOOST_COMMON"
-      :: "END_STONE_SWORD"
-      :: "SLIME_BOW"
-      :: "ORNATE_ZOMBIE_SWORD"
-      :: "EFFICIENT_AXE"
-      :: "SILVER_FANG"
-      :: "PET_ITEM_COMBAT_SKILL_BOOST_RARE"
-      :: "SCORPION_BOW"
-      :: "IRON_SWORD"
-      :: "SAVANA_BOW"
-      :: "PROMISING_AXE"
-      :: "PIGMAN_SWORD"
-      :: "PET_ITEM_COMBAT_SKILL_BOOST_EPIC"
-      :: "GOLD_AXE"
-      :: "STONE_BLADE"
-      :: "ASPECT_OF_THE_DRAGON"
-      :: "RECLUSE_FANG"
-      :: "SCORPION_FOIL"
-      :: "LEAPING_SWORD"
-      :: "EDIBLE_MACE"
-      :: "DIAMOND_SWORD"
-      :: "HUNTER_KNIFE"
-      :: "REAPER_SWORD"
-      :: "STONE_SWORD"
-      :: "STONE_AXE"
-      :: "RAIDER_AXE"
-      :: Nil
-    )
-
   final val PET_LEVELS: List[Int] = List(100,
       110,
       120,
@@ -321,6 +239,7 @@ object Constants {
       :: "936c14678ae8412ba01efadf62197b25" // eva
       :: "405b843b387f4134a46ba2e9fd538617" // sarah
       :: "d33a4d925db84c30a28e528239471102" // gus
+      :: "5a2d21179f6143e39ae751ad0c1d145e" // ajay but its his alt lol
       :: Nil
     )
 

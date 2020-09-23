@@ -64,7 +64,7 @@ class HiddenSkyBlockCommand extends CommandBase {
                 buffer.append(new ChatComponentText("\u00a7cNo skills found. They may be hidden!"))
               }
 
-              val viewStatBoost = Loader.isModLoaded("StatBoostViewer")
+              val viewStatBoost = Loader.isModLoaded("StatBoostViewer") || Loader.isModLoaded("leirvika")
 
               /* armour */
               addBreaklineToBuffer('b')
@@ -105,6 +105,8 @@ class HiddenSkyBlockCommand extends CommandBase {
               addBreaklineToBuffer('d')
               addTitleToBuffer("Weapons", 'd')
               if (member.has("inv_contents")) {
+                val weapons = new ListBuffer[(String, StringBuilder)]
+                val rods = new ListBuffer[(String, StringBuilder)]
                 val inventories = ("inv_contents", 35) :: ("ender_chest_contents", 64) :: Nil
                 inventories.foreach { it =>
                   val invContents = getNbtCompound(member.get(it._1).getAsJsonObject.get("data").getAsString).getTagList("i", 10)
@@ -113,37 +115,55 @@ class HiddenSkyBlockCommand extends CommandBase {
                       try {
                         val item = invContents.getCompoundTagAt(i)
                         if (item.hasNoTags) break else {
+                          var rod = false
+                          var weapon = false
                           val tag = item.getCompoundTag("tag")
+                          val display = tag.getCompoundTag("display")
+                          val name = display.getString("Name")
+                          val sb = new StringBuilder
+                          sb.append(s"$name\n")
+                          if (display.hasKey("Lore")) {
+                            val lore = display.getTagList("Lore", 8)
+                            for (j <- 0 until lore.tagCount()) {
+                              val l = lore.getStringTagAt(j)
+                              //sb.append(s"$l${if (j == lore.tagCount() - 1) "" else "\n"}")
+                              if (j == lore.tagCount() - 1) {
+                                val l_ = l.toLowerCase()
+                                if (l_.contains("sword") || l_.contains("bow")) weapon = true else if (l_.contains("rod")) rod = true else break
+                                sb.append(l)
+                              } else sb.append(s"$l\n")
+                            }
+                          } else break
                           val extraAttributes = tag.getCompoundTag("ExtraAttributes")
-                          if (Constants.WEAPONS.contains(extraAttributes.getString("id")) || item.getInteger("id") == 346) {
-                            val display = tag.getCompoundTag("display")
-                            val name = display.getString("Name")
-                            val sb = new StringBuilder
-                            sb.append(s"$name\n")
-                            if (display.hasKey("Lore")) {
-                              val lore = display.getTagList("Lore", 8)
-                              for (j <- 0 until lore.tagCount())
-                                sb.append(s"${lore.getStringTagAt(j)}${if (j == lore.tagCount() - 1) "" else "\n"}")
+                          if (viewStatBoost) {
+                            val flags = (extraAttributes.hasKey("baseStatBoostPercentage"), extraAttributes.hasKey("item_tier"))
+                            if (flags._1 || flags._2) {
+                              sb.append("\n")
+                              if (flags._1)
+                                sb.append(s"\n\u00a76Stat Boost Percentage: ${extraAttributes.getInteger("baseStatBoostPercentage")}/50")
+                              if (flags._2)
+                                sb.append(s"\n\u00a76Found on Floor ${extraAttributes.getInteger("item_tier")}")
                             }
-                            if (viewStatBoost) {
-                              val flags = (extraAttributes.hasKey("baseStatBoostPercentage"), extraAttributes.hasKey("item_tier"))
-                              if (flags._1 || flags._2) {
-                                sb.append("\n")
-                                if (flags._1)
-                                  sb.append(s"\n\u00a76Stat Boost Percentage: ${extraAttributes.getInteger("baseStatBoostPercentage")}/50")
-                                if (flags._2)
-                                  sb.append(s"\n\u00a76Found on Floor ${extraAttributes.getInteger("item_tier")}")
-                              }
-                            }
-                            buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7r$name")
-                              .setHoverEvent(sb.toString())
-                              .build()
-                            )
                           }
+                          if (weapon) weapons.append((name, sb)) else if (rod) rods.append((name, sb))
+
+                          //buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7r$name")
+                          //  .setHoverEvent(sb.toString())
+                          //  .build()
+                          //)
                         }
                       } catch { case NonFatal(_) => /* nothing */}
                     }
                   }
+                }
+                def itemIter(lb: ListBuffer[(String, StringBuilder)]): Unit = {
+                  lb.foreach(it => buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7r${it._1}").setHoverEvent(it._2.toString()).build()))
+                }
+                itemIter(weapons)
+                if (rods.nonEmpty) {
+                  buffer.append(new ChatComponentText(""))
+                  addTitleToBuffer("Fishing Rods", 'd')
+                  itemIter(rods)
                 }
               } else buffer.append(new ChatComponentText("\u00a7cNo inventory found. It may be hidden!"))
 
