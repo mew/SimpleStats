@@ -387,14 +387,12 @@ class HiddenSkyBlockCommand extends CommandBase {
     }
 
     private def calculateLevel(): Int = {
-      var totalExp = 0
-      var lvl = 0
+      var totalExp, lvl = 0
       breakable {
         for (i <- offset to offset + 100) {
           lvl = i - offset
-          val j = try { Constants.PET_LEVELS(i) } catch { case NonFatal(_) => 0 }
-          totalExp += j
-          if (totalExp > exp) break
+          totalExp += (try { Constants.PET_LEVELS(i) } catch { case NonFatal(_) => 0 })
+          if ((totalExp - Constants.PET_LEVELS(offset)) > exp) break
         }
       }
       lvl
