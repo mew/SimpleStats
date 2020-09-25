@@ -51,8 +51,7 @@ class HiddenSkyBlockCommand extends CommandBase {
                 var skillAvg = 0.0
                 skills.foreach { it =>
                   val skillExp = getDouble(member, s"experience_skill_${it.toLowerCase}")
-                  var skill = 0
-                  var total = 0
+                  var skill, total = 0
                   val map = if (it == "Runecrafting") (Constants.RUNECRAFTING_LEVELS, 25) else (Constants.SKILL_LEVELS, 50)
                   breakable { for (i <- 1 to map._2) { val j = map._1(i) + total; if (skillExp > j) { skill = i; total = j } else break } }
                   addStatToBuffer(it, skill, if (skill == map._2) '6' else '5')
@@ -107,9 +106,12 @@ class HiddenSkyBlockCommand extends CommandBase {
               if (member.has("inv_contents")) {
                 val weapons = new ListBuffer[(String, StringBuilder)]
                 val rods = new ListBuffer[(String, StringBuilder)]
-                val inventories = ("inv_contents", 35) :: ("ender_chest_contents", 64) :: Nil
+                val inventories = new ListBuffer[(String, Int)]
+                //val inventories = ("inv", 35) :: ("ender_chest", 64) :: Nil
+                (("inv", 35) :: ("ender_chest", 64) :: Nil).foreach(it => inventories.append(it))
+                if (member.has("personal_vault_contents")) inventories.append(("personal_vault", 27))
                 inventories.foreach { it =>
-                  val invContents = getNbtCompound(member.get(it._1).getAsJsonObject.get("data").getAsString).getTagList("i", 10)
+                  val invContents = getNbtCompound(member.get(s"${it._1}_contents").getAsJsonObject.get("data").getAsString).getTagList("i", 10)
                   for (i <- 0 to it._2) {
                     breakable {
                       try {
@@ -191,7 +193,7 @@ class HiddenSkyBlockCommand extends CommandBase {
                   else {
                     pets_.slice(0, 9).foreach(it => buffer.append(new ChatComponentText(s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}")))
                     var morePets = ""
-                    pets_.slice(9, pets.size).foreach(it => morePets += s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}\n")
+                    pets_.slice(9, pets.size).foreach(it => morePets += s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}${if (it != pets_.last) "\n" else ""}")
                     buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7cAnd ${pets.size - 10} more..").setHoverEvent(morePets).build())
                   }
                 } else buffer.append(new ChatComponentText("\u00a7cNo pets found."))
@@ -202,6 +204,68 @@ class HiddenSkyBlockCommand extends CommandBase {
               addTitleToBuffer("Pet Milestones", '7')
               addStatToBuffer("Sea Creatures Killed", getInt(stats, "pet_milestone_sea_creatures_killed"), '7')
               addStatToBuffer("Ores Mined", getInt(stats, "pet_milestone_ores_mined"), '7')
+
+              /* Dungeons */
+              addBreaklineToBuffer('3')
+              addTitleToBuffer("Dungeons", '3')
+              if (member.has("dungeons")) {
+                def calcDungeonLevel(exp: Double): Int = {
+                  var i, j = 0
+                  breakable(for (k <- 1 to 50) { val l = Constants.DUNGEON_LEVELS(k) + j; if (exp > l) { i = k; j = l } else break })
+                  i
+                }
+                val dungeons = member.get("dungeons").getAsJsonObject
+                val catacombs = dungeons.get("dungeon_types").getAsJsonObject.get("catacombs").getAsJsonObject
+                val sdc = if (dungeons.has("selected_dungeon_class")) dungeons.get("selected_dungeon_class").getAsString else "none"
+                val cl = calcDungeonLevel(getDouble(catacombs, "experience"))
+                val classes = "healer" :: "mage" :: "berserk" :: "archer" :: "tank" :: Nil
+                addStatToBuffer("Catacombs Level", cl, if (cl > 29) '6' else '3')
+                buffer.append(new ChatComponentText(""))
+                if (dungeons.has("player_classes")) {
+                  val playerClasses = dungeons.get("player_classes").getAsJsonObject
+                  classes.foreach { it =>
+                    if (playerClasses.has(it)) {
+                      val c = it.charAt(0)
+                      val u = s"${it.replaceFirst(c.toString, c.toUpper.toString)} Level"
+                      val lvl = calcDungeonLevel(getDouble(playerClasses.get(it).getAsJsonObject, "experience"))
+                      buffer.append(new ChatComponentText(s"\u00a7${if (lvl > 29) '6' else '3'}${Utils.formatStat(u, lvl)}${if (it == sdc) " \u00a7a\u00a7l- ACTIVE CLASS" else ""}"))
+                    }
+                  }
+                }
+                buffer.append(new ChatComponentText(""))
+                buffer.append(new ChatComponentText("\u00a73Floor Stats\u00a7f:"))
+                def getFloorStat(name: String, floor: Int): Int = if (catacombs.has(name)) {
+                  val obj = catacombs.get(name).getAsJsonObject
+                  if (obj.has(floor.toString)) obj.get(floor.toString).getAsInt else 0
+                } else 0
+                def readableTime(ms: Int): String = {
+                  val s = ms / 1000
+                  var t = s"${s / 60}m"
+                  if (s % 60 != 0) t += s"${s % 60}s"
+                  t
+                }
+                for (i <- 0 to 10) {
+                  breakable {
+                    if (!catacombs.get("times_played").getAsJsonObject.has(i.toString)) break
+                    val formattedFloor = if (i == 0) "\u00a7cDungeon Entrance" else s"\u00a7cFloor \u00a77${Constants.ROMAN_NUMERALS(i)}"
+                    var hoverText = s"\u00a78\u00a7kAN\u00a7r $formattedFloor \u00a78\u00a7kNA\n" // <3
+                    val timesPlayed = getFloorStat("times_played", i)
+                    val tierCompletions = getFloorStat("tier_completions", i)
+                    hoverText += s"\u00a7cTimes Played\u00a7e: $timesPlayed\n\u00a7cTimes Completed\u00a7e: $tierCompletions\n\u00a7cCompletion %\u00a7e: ${((tierCompletions.toFloat / timesPlayed.toFloat) * 100).toInt}%\n"
+                    hoverText += s"\u00a7cBest Score\u00a7e: ${getFloorStat("best_score", i)}\n"
+                    hoverText += s"\u00a7cMini-Boss Kills\u00a7e: ${getFloorStat("watcher_kills", i)}\n"
+                    val t = "fastest_time" :: "fastest_time_s" :: "fastest_time_s_plus" :: Nil
+                    val m = Map("fastest_time" -> "Fastest Time\u00a7e: ", "fastest_time_s" -> "Fastest Time (\u00a76S\u00a7c)\u00a7e: ", "fastest_time_s_plus" -> "Fastest Time (\u00a76S+\u00a7c)\u00a7e: ")
+                    t.foreach { it =>
+                      val ms = getFloorStat(it, i)
+                      //if (ms == 0) hoverText += s"${m(it)}\u00a7cN/A\n" else {
+                      hoverText += s"\u00a7c${m(it)}${if (ms == 0) "\u00a7cN/A" else readableTime(ms)}\n"
+                        //hoverText.patch(hoverText.lastIndexOf('\n'), "", 1)
+                    }
+                    buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 $formattedFloor").setHoverEvent(hoverText.patch(hoverText.lastIndexOf('\n'), "", 1)).build())
+                  }
+                }
+              } else buffer.append(new ChatComponentText("No dungeon stats found for this profile."))
 
               /* slayer */
               addBreaklineToBuffer('2')

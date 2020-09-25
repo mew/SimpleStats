@@ -301,7 +301,7 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
             Constants.DUELS_DIVISIONS.foreach { it =>
               val key = s"all_modes_${it._1.toLowerCase()}_title_prestige"
               if (duels.has(key)) {
-                saveStatsToBuffer("Division", s"\u00a7${it._2}${it._1} ${Constants.romanNumerals(duels.getStatsAsInt(key))}")
+                saveStatsToBuffer("Division", s"\u00a7${it._2}${it._1} ${Constants.ROMAN_NUMERALS(duels.getStatsAsInt(key))}")
                 break
               }
             }
