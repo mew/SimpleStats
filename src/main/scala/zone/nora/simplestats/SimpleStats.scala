@@ -25,7 +25,7 @@ import scala.util.control.NonFatal
 
 @Mod(modid = "SimpleStats", name = "SimpleStats", version = SimpleStats.VERSION, modLanguage = "scala")
 object SimpleStats {
-  final val VERSION = "1.4.2" // Current version of SimpleStats
+  final val VERSION = "1.5" // Current version of SimpleStats
   final val logger: Logger = LogManager.getLogger("SimpleStats")
   var valid = false // Is the API key valid
   var key: UUID = _ // Hypixel API key in UUID form

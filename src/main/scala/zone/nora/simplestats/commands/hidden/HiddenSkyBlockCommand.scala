@@ -377,7 +377,7 @@ class HiddenSkyBlockCommand extends CommandBase {
     CompressedStreamTools.readCompressed(inputStream)
   }
 
-  private case class SkyblockPet(private val name: String, val exp: Double, private val tier: String) {
+  private case class SkyblockPet(private val name: String, exp: Double, private val tier: String) {
     private val offset: Int = tier match {
       case "uncommon" => 5
       case "rare" => 10
