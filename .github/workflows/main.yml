@@ -1,10 +1,9 @@
-name: "CodeQL Analysis"
+name: "Main CI"
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
-  analyze:
-    name: Analyze
+  build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -15,11 +14,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-      with:
-        fetch-depth: 2
-
-    - run: git checkout HEAD^2
-      if: ${{ github.event_name == 'pull_request' }}
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
@@ -31,3 +25,9 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
+    
+    - name: Upload the build jar
+      uses: actions/upload-artifact@v2
+      with:
+        name: SimpleStats
+        path: build/libs/
