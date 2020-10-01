@@ -1,9 +1,9 @@
-name: "Main CI"
+name: "CI"
 
 on: [push]
 
 jobs:
-  build:
+  main:
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,20 +20,17 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    - name: Autobuild
+    - name: CodeQL Build
       uses: github/codeql-action/autobuild@v1
 
-    - name: test
-      run: ls -a
+    - name: Gradle Build
+      run: ./gradlew build -S
 
-    - name: Upload the build jar
+    - name: Upload Build
       uses: actions/upload-artifact@v2
       with:
         name: SimpleStats
         path: build/libs/
 
-    - name: test 2
-      run: ls -a
-      
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
