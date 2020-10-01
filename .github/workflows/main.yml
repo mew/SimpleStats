@@ -1,27 +1,36 @@
-name: Gradle CI
+name: "CI"
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
-  build:
+  main:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['java']
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2.3.3
-    
-    - name: Set up JDK
-      uses: actions/setup-java@v1.4.2
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
       with:
-        java-version: 1.8
-    
-    - name: Gradle build
-      run: |
-        chmod +x gradlew
-        ./gradlew build -S
-    
-    - name: Upload build
+        languages: ${{ matrix.language }}
+
+    - name: CodeQL Build
+      uses: github/codeql-action/autobuild@v1
+
+    - name: Gradle Build
+      run: ./gradlew build -S
+
+    - name: Upload Build
       uses: actions/upload-artifact@v2
       with:
-        name: build
+        name: SimpleStats
         path: build/libs/
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
