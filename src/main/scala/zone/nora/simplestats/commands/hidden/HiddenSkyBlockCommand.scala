@@ -193,8 +193,8 @@ class HiddenSkyBlockCommand extends CommandBase {
                   else {
                     pets_.slice(0, 9).foreach(it => buffer.append(new ChatComponentText(s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}")))
                     var morePets = ""
-                    pets_.slice(9, pets.size).foreach(it => morePets += s"  \u00a78\u27a4 \u00a7r${it.getFormattedName}${if (it != pets_.last) "\n" else ""}")
-                    buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7cAnd ${pets.size - 10} more..").setHoverEvent(morePets).build())
+                    pets_.slice(9, pets.size).foreach(it => morePets += s"${it.getFormattedName}${if (it != pets_.last) "\n" else ""}")
+                    buffer.append(ChatComponentBuilder.of(s"  \u00a78\u27a4 \u00a7cAnd ${pets.size - 9} more..").setHoverEvent(morePets).build())
                   }
                 } else buffer.append(new ChatComponentText("\u00a7cNo pets found."))
               } catch { case NonFatal(_) => /* nothing */ }
