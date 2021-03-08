@@ -366,9 +366,9 @@ class HiddenSkyBlockCommand extends CommandBase {
 
   private def addBreaklineToBuffer(colour: Char = '9'): Unit = {
     val dashes = new StringBuilder
-    val dash = Math.floor((280 * Minecraft.getMinecraft.gameSettings.chatWidth + 40) / 320 * (1 / Minecraft.getMinecraft.gameSettings.chatScale) * 53).toInt - 3
+    val dash = Math.floor((280 * Minecraft.getMinecraft.gameSettings.chatWidth + 40) / 320 * (1 / Minecraft.getMinecraft.gameSettings.chatScale) * 53).toInt - 6
     for (i <- 1 to dash)
-      if (i == (dash / 2)) dashes.append(s"\u00a7$colour[\u00a76SS\u00a7$colour]\u00a7m") else dashes.append("-")
+      if (i == (dash / 2)) dashes.append(s"\u00a7$colour[\u00a76SIMPLE\u00a7$colour]\u00a7m") else dashes.append("-")
     buffer.append(new ChatComponentText(s"\u00a7$colour\u00a7m$dashes"))
   }
 

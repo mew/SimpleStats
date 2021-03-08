@@ -14,7 +14,7 @@ import net.minecraft.util.ChatComponentText
 import zone.nora.simplestats.SimpleStats
 
 object Utils {
-  private final val PREFIX = "\u00a79[\u00a76SS\u00a79] \u00a7f"
+  private final val PREFIX = "\u00a79[\u00a76SIMPLE\u00a79] \u00a7f"
   private final val VERSION_URL = new URL("https://raw.githubusercontent.com/mew/simplestats/master/version.txt")
   private final val MINECRAFT = Minecraft.getMinecraft
 
@@ -81,7 +81,7 @@ object Utils {
       c += 1
       exp -= increment
     }
-    c.+(Utils.roundDouble(exp / increment))
+    c + Utils.roundDouble(exp / increment)
   }
 
   def roundDouble(n: Double): Double = (math rint n * 100) / 100
@@ -120,9 +120,9 @@ object Utils {
 
   def breakLine(): Unit = {
     val dashes = new StringBuilder
-    val dash = Math.floor((280 * MINECRAFT.gameSettings.chatWidth + 40) / 320 * (1 / MINECRAFT.gameSettings.chatScale) * 53).toInt - 3
+    val dash = Math.floor((280 * MINECRAFT.gameSettings.chatWidth + 40) / 320 * (1 / MINECRAFT.gameSettings.chatScale) * 53).toInt - 6
     for (i <- 1 to dash)
-      if (i == (dash / 2)) dashes.append("\u00a79[\u00a76SS\u00a79]\u00a7m") else dashes.append("-")
+      if (i == (dash / 2)) dashes.append("\u00a79[\u00a76SIMPLE\u00a79]\u00a7m") else dashes.append("-")
     MINECRAFT.thePlayer.addChatMessage(new ChatComponentText(s"\u00a79\u00a7m$dashes"))
   }
 
@@ -156,7 +156,8 @@ object Utils {
           }
           else f"${m.group(0).toInt}%,d"
         )
-        t
+        // russian number formatter uses no-break spaces, which can't be rendered by the game
+        t.replace('\u0020', ' ')
       }
     }
 

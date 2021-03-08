@@ -292,7 +292,6 @@ object Constants {
       :: "936c14678ae8412ba01efadf62197b25" // eva
       :: "405b843b387f4134a46ba2e9fd538617" // sarah
       :: "d33a4d925db84c30a28e528239471102" // gus
-      :: "5a2d21179f6143e39ae751ad0c1d145e" // ajay but its his alt lol
       :: Nil
     )
 
