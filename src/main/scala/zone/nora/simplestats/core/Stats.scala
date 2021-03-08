@@ -2,15 +2,15 @@ package zone.nora.simplestats.core
 
 import java.math.BigInteger
 import java.sql.Timestamp
-
 import com.google.gson.JsonObject
 import net.hypixel.api.HypixelAPI
 import net.hypixel.api.reply.PlayerReply
 import net.hypixel.api.util.{GameType, ILeveling}
-import zone.nora.simplestats.util.{QuestData, Constants, Utils}
+import zone.nora.simplestats.util.{Constants, QuestData, Utils}
 
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
 import scala.util.control.Breaks.{break, breakable}
 import scala.util.control.NonFatal
 
@@ -464,18 +464,16 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
         }
 
         firstLine(player, "SkyWars")
-        val swLevel = if (sw.has("levelFormatted")) {
-          sw.stats.get("levelFormatted").getAsString
-        } else {
-          try { // https://hypixel.net/posts/19293045
-            val swExp = sw.getStatsAsDouble("skywars_experience")
-            val exps = 0 :: 20 :: 70 :: 150 :: 250 :: 500 :: 1000 :: 2000 :: 3500 :: 6000 :: 10000 :: 15000 :: Nil
-            if (swExp >= 1500) (swExp - 15000) / 10000 + 12
-            else for (i <- exps.indices) if (swExp < exps(i)) 1 + i + (swExp - exps(i - 1)) / (exps(i) - exps(i - 1))
-          } catch {
-            case e: Exception => e.printStackTrace(); 0
-          }
+        val levelInt = try { // https://hypixel.net/posts/19293045
+          val swExp = sw.getStatsAsDouble("skywars_experience")
+          val exps = 0 :: 20 :: 70 :: 150 :: 250 :: 500 :: 1000 :: 2000 :: 3500 :: 6000 :: 10000 :: 15000 :: Nil
+          if (swExp >= 1500) ((swExp - 15000) / 10000 + 12).toInt
+          else for (i <- exps.indices) if (swExp < exps(i)) 1 + i + (swExp - exps(i - 1)) / (exps(i) - exps(i - 1))
+        } catch {
+          case e: Exception => e.printStackTrace(); 0
         }
+        println(levelInt)
+        val swLevel = if (sw.has("levelFormatted")) sw.stats.get("levelFormatted").getAsString else levelInt
 
         val swlr = Utils.roundDouble(sw.getStatsAsDouble("wins_solo") / sw.getStatsAsInt("losses_solo", one = true))
         val owlr = Utils.roundDouble(sw.getStatsAsDouble("wins") / sw.getStatsAsInt("losses", one = true))
@@ -500,7 +498,20 @@ class Stats(api: HypixelAPI, name: String, compact: Boolean = false) {
           saveStatsToBuffer("Shards", s"${sw.getStatsAsInt("shard")}/20000")
           saveStatsToBuffer("Opals", sw.getStatsAsInt("opals"))
           val totalShards = sw.getStatsAsInt("shard_solo") + sw.getStatsAsInt("shard_team")
-          saveStatsToBuffer("Total Opals", totalShards / 20000)
+          val additionalOpals = levelInt match {
+            case levelInt if 0 to 9 contains levelInt => 0
+            case levelInt if 10 to 14 contains levelInt => 1
+            case levelInt if 15 to 19 contains levelInt => 2
+            case levelInt if 20 to 24 contains levelInt => 3
+            case levelInt if 25 to 29 contains levelInt => 4
+            case levelInt if 30 to 34 contains levelInt => 5
+            case levelInt if 35 to 39 contains levelInt => 6
+            case levelInt if 40 to 44 contains levelInt => 7
+            case levelInt if 45 to 49 contains levelInt => 8
+            case levelInt if 50 to 59 contains levelInt => 9
+            case _ => 10
+          }
+          saveStatsToBuffer("Total Opals", (totalShards / 20000) + additionalOpals)
         }
       case "sc" | "skyclash" => // Not really maintained due to its removal
         val sc = new StatsManager(player, "SkyClash")

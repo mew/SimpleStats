@@ -48,14 +48,15 @@ class HiddenSkyBlockCommand extends CommandBase {
               addTitleToBuffer("Skills", '5')
               if (member.has("experience_skill_combat")) {
                 val skills = "Combat" :: "Runecrafting" :: "Mining" :: "Alchemy" :: "Farming" :: "Taming" :: "Enchanting" :: "Fishing" :: "Foraging" :: "Carpentry" :: Nil
+                val toSixty = "Enchanting" :: "Farming" :: "Mining" :: Nil
                 var skillAvg = 0.0
                 skills.foreach { it =>
                   val skillExp = getDouble(member, s"experience_skill_${it.toLowerCase}")
                   var skill, total = 0
-                  val map = if (it == "Runecrafting") (Constants.RUNECRAFTING_LEVELS, 25) else (Constants.SKILL_LEVELS, 50)
+                  val map = if (it == "Runecrafting") (Constants.RUNECRAFTING_LEVELS, 25) else (Constants.SKILL_LEVELS, if (toSixty.contains(it)) 60 else 50)
                   breakable { for (i <- 1 to map._2) { val j = map._1(i) + total; if (skillExp > j) { skill = i; total = j } else break } }
                   addStatToBuffer(it, skill, if (skill == map._2) '6' else '5')
-                  if (map._2 == 50 && it != "Carpentry") skillAvg += skill
+                  if (it != "Runecrafting" && it != "Carpentry") skillAvg += skill
                 }
                 buffer.append(new ChatComponentText(""))
                 addStatToBuffer("Skill Average", skillAvg / 8, 'a')
