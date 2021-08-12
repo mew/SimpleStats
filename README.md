@@ -1,4 +1,4 @@
-# SimpleStats ![CI](https://github.com/mew/SimpleStats/workflows/CI/badge.svg?branch=master&event=push) ![GitHub total downloads](https://img.shields.io/github/downloads/mew/simplestats/total) 
+# SimpleStats ![CI](https://github.com/mew/SimpleStats/workflows/CI/badge.svg?branch=rewrite&event=push) ![GitHub total downloads](https://img.shields.io/github/downloads/mew/simplestats/total) 
 A no-bullshit in-game stats viewer.
 
 Replaces the default `/stats` command with a much more informative text-based version:  
