@@ -11,6 +11,8 @@ infix fun <T> Stat<T>.withObject(obj: JsonObject): Pair<JsonObject, Stat<T>> = o
 
 inline fun <reified T> JsonElement.getAsType(): T = SimpleStats.gson.fromJson(this, T::class.java)
 
+fun String.firstCharUpper(): String = replaceFirstChar { it.uppercaseChar() }
+
 fun JsonObject.getFormattedPlayerName(): String {
     val prefix = get("prefix")?.asString
     if (prefix != null) {
