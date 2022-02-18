@@ -13,6 +13,9 @@ inline fun <reified T> JsonElement.getAsType(): T = SimpleStats.gson.fromJson(th
 
 fun String.firstCharUpper(): String = replaceFirstChar { it.uppercaseChar() }
 
+fun String.lowerSnakeToUpper(): String =
+    if (contains('_')) { split('_').joinToString(" ") { it.firstCharUpper() } } else firstCharUpper()
+
 fun JsonObject.getFormattedPlayerName(): String {
     val prefix = get("prefix")?.asString
     if (prefix != null) {

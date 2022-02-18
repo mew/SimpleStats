@@ -19,16 +19,20 @@ object SetKeyCommand : CommandBase() {
                 EssentialAPI.getGuiUtil().openScreen(Config.gui())
             } else {
                 Utils.put("Setting API key.")
-                Multithreading.runAsync {
-                    Config.hypixelKeyS = a0
-                    if (Config.validKey) {
-                        Utils.put("Successfully set key!")
-                    } else {
-                        Utils.err("Set key... but it was invalid!!")
-                        Utils.err("Double check that you input your key correctly.")
+                if (a0.length != 36) {
+                    Utils.err("This is not a valid key.")
+                } else {
+                    Multithreading.runAsync {
+                        Config.hypixelKeyS = a0
+                        if (Config.validKey) {
+                            Utils.put("Successfully set key!")
+                        } else {
+                            Utils.err("Set key... but it was invalid!!")
+                            Utils.err("Double check that you input your key correctly.")
+                        }
+                        Config.markDirty()
+                        Config.writeData()
                     }
-                    Config.markDirty()
-                    Config.writeData()
                 }
             }
         }

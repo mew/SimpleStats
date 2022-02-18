@@ -1,7 +1,9 @@
 package zone.nora.simplestats.commands
 
 import gg.essential.api.utils.Multithreading
+import gg.essential.universal.UMinecraft
 import net.hypixel.api.HypixelAPI
+import net.hypixel.api.util.GameType
 import net.hypixel.api.util.ILeveling
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
@@ -9,6 +11,7 @@ import net.minecraft.util.BlockPos
 import zone.nora.simplestats.SimpleStats
 import zone.nora.simplestats.config.Config
 import zone.nora.simplestats.dsl.firstCharUpper
+import zone.nora.simplestats.dsl.lowerSnakeToUpper
 import zone.nora.simplestats.dsl.toUUID
 import zone.nora.simplestats.dsl.withObject
 import zone.nora.simplestats.stats.Stat
@@ -30,7 +33,7 @@ object StatsCommand : CommandBase() {
             } else {
                 val reply = playerReply.player
                 if (reply == null) {
-                    Utils.err("API returned empty body. Is this a real player?")
+                    Utils.err("API returned empty body. Is this a real player [$playerName]?")
                     SimpleStats.uuidMap[playerName] = UUID.randomUUID()
                 } else {
                     if (gameDbName == null) {
@@ -65,10 +68,15 @@ object StatsCommand : CommandBase() {
                     } else {
                         StatsBuilder(reply, gameDbName).construct { player, game ->
                             firstLine()
-                            activeObject = game ?: return@construct // this better not ever happen
+                            if (game == null) {
+                                addError("No stats found.")
+                                return@construct
+                            }
+                            activeObject = game
+//                            activeObject = game ?: return@construct
                             when (gameDbName) {
                                 "Arcade" -> {
-                                    this + Stat<Int>("coins")
+                                    this + Stat.COINS
                                 }
                                 "Arena" -> {
                                     fun arenaModesStats(stat: String) {
@@ -84,7 +92,7 @@ object StatsCommand : CommandBase() {
                                     }
                                     arenaModesStats("wins")
                                     arenaModesStats("losses")
-                                    this + Stat<Int>("coins")
+                                    this + Stat.COINS
                                     arrayOf("offensive", "utility", "support", "ultimate").forEach { skill ->
                                         this + Stat<String>(skill, "${skill.firstCharUpper()} Skill") {
                                             it.replace('_', ' ')
@@ -101,7 +109,7 @@ object StatsCommand : CommandBase() {
                                         "damage_taken" to "Damage Taken",
                                         "coins" to "Coins"
                                     ).forEach {
-                                        this + Stat<Int>(it.first, it.second)
+                                        this + Stat<Long>(it.first, it.second)
                                     }
                                     val classes = arrayOf("mage", "paladin", "shaman", "warrior")
                                     val upgrades = arrayOf(
@@ -119,7 +127,7 @@ object StatsCommand : CommandBase() {
                                     classes.forEach { wlClass ->
                                         var total = 0
                                         upgrades.forEach { upgrade ->
-                                            total += game["${wlClass}_$upgrade"]?.asInt ?: 0
+                                            total += game.get("${wlClass}_$upgrade")?.asInt ?: 0
                                         }
                                         addLine("${wlClass.firstCharUpper()} Level" to total)
                                     }
@@ -128,7 +136,8 @@ object StatsCommand : CommandBase() {
                                     val lvl = player.get("achievements")?.asJsonObject?.get("bedwars_level")?.asInt ?: 1
                                     val symbol = if (lvl in 1000..1999) '\u272a' else if (lvl > 1999) '\u269d' else '\u272b'
                                     val cl = lvl.toString()
-                                    fun cLvl(c: String): String = "${c[0]}${cl[0]}${c[1]}${cl[1]}${c[2]}${cl[2]}${c[3]}${cl[3]}${c[4]}"
+                                    fun cLvl(c: String): String =
+                                        "${c[0]}${cl[0]}\u00a7${c[1]}${cl[1]}\u00a7${c[2]}${cl[2]}\u00a7${c[3]}${cl[3]}\u00a7${c[4]}"
                                     val s = when (lvl) {
                                         in (-1)..99 -> "7$lvl"
                                         in 100..199 -> "f$lvl"
@@ -163,7 +172,222 @@ object StatsCommand : CommandBase() {
                                         in 3000..10000 -> cLvl("e66cc")
                                         else -> "$lvl"
                                     }
-                                    addLine("BedWars Level" to "\u00a7$s$symbol")
+                                    addLine("Level" to "\u00a7$s$symbol")
+                                    this + Stat<Int>("kills_bedwars", "Kills")
+                                    this + Stat<Int>("deaths_bedwars", "Deaths")
+                                    this + Stat<Int>("final_kills_bedwars", "Final Kills")
+                                    this + Stat<Int>("final_deaths_bedwars", "Final Deaths")
+                                    this + Stat<Int>("wins_bedwars", "Wins")
+                                    this + Stat<Int>("coins")
+                                    this + Stat<Int>("winstreak")
+                                }
+                                "BuildBattle" -> {
+                                    this + Stat<Int>("wins")
+                                    this + Stat<Int>("score", "Title") {
+                                        addLine("Score" to it)
+                                        "\u00a7" + when (it) {
+                                            in 0..99 -> "fRookie"
+                                            in 100..249 -> "7Untrained"
+                                            in 250..499 -> "eAmateur"
+                                            in 500..999 -> "aApprentice"
+                                            in 1000..1999 -> "dExperienced"
+                                            in 2000..3499 -> "9Seasoned"
+                                            in 3500..4999 -> "2Trained"
+                                            in 5000..7499 -> "3Skilled"
+                                            in 7500..9999 -> "cTalented"
+                                            in 10000..14999 -> "5Professional"
+                                            in 15000..19999 -> "1Expert"
+                                            else -> "4Master"
+                                        }
+                                    }
+                                    this + Stat<Int>("coins")
+                                    this + Stat<Int>("games_played", "Games Played")
+                                    this + Stat<Int>("correct_guesses", "Correct Guessed (GTB)")
+                                }
+                                "Duels" -> {
+                                    // todo division
+                                    this + Stat<Int>("wins")
+                                    this + Stat<Int>("losses")
+                                    this + Stat<Int>("current_winstreak", "Winstreak")
+                                    this + Stat<Int>("best_overall_winstreak", "Best Winstreak")
+                                    this + Stat<Int>("coins")
+                                }
+                                "GingerBread" -> {
+                                    arrayOf("gold", "silver", "bronze").forEach {
+                                        this + Stat<Int>("${it}_trophy", "${it.firstCharUpper()} Trophies")
+                                    }
+                                    this + Stat<Int>("coins")
+                                }
+                                "Housing" -> {
+                                    addError("what did you even expect to be here.")
+                                }
+                                "HungerGames" -> {
+                                    this + Stat<Int>("kills")
+                                    this + Stat<Int>("deaths")
+                                    this + Stat<Int>("wins_solo_normal", "Wins") {
+                                        it + (game["wins_teams_normal"]?.asInt ?: 0)
+                                    }
+                                    this + Stat<Int>("coins")
+                                    this + Stat<String>("defaultkit", "Default Kit")
+                                }
+                                "Legacy" -> {
+                                    this + Stat<Int>("tokens")
+                                    this + Stat<Int>("total_tokens", "Total Tokens")
+                                }
+                                "MCGO" -> {
+                                    arrayOf("Defusal" to "", "Deathmatch" to "_deathmatch").forEachIndexed { i, mode ->
+                                        this + Stat<Int>("kills${mode.second}", "${mode.first} Kills")
+                                        this + Stat<Int>("deaths${mode.second}", "${mode.first} Deaths")
+                                        if (i == 0) {
+                                            this + Stat<Int>("round_wins", "Defusal Round Wins")
+                                            this + Stat<Int>("game_wins", "Defusal Game Wins")
+                                        } else {
+                                            this + Stat<Int>("game_wins_deathmatch", "Deathmatch Wins")
+                                        }
+                                    }
+                                    this + Stat.COINS
+                                }
+                                "MurderMystery" -> {
+                                    this + Stat<Int>("murderer_wins")
+                                    this + Stat<Int>("detective_wins")
+                                    arrayOf("assassins", "infection").forEach {
+                                        this + Stat<Int>("wins_MURDER_${it.uppercase()}", "${it.firstCharUpper()} Wins")
+                                    }
+                                    arrayOf("murderer", "detective").forEach { this + Stat<Int>("${it}_chance") { p -> "$p%" } }
+                                    this + Stat<Int>("kills_as_murderer")
+                                    this + Stat.COINS
+                                }
+                                "Paintball" -> {
+                                    arrayOf("kills", "deaths", "wins", "shots_fired").forEach { this + Stat<Int>(it) }
+                                    this + Stat<String>("hat") {
+                                        it.lowerSnakeToUpper()
+                                    }
+                                    this + Stat.COINS
+                                }
+                                "Pit" -> {
+                                    val pitProfile = game["profile"]?.asJsonObject
+                                    val pitStatsPtl = game["pit_stats_ptl"]?.asJsonObject
+                                    if (pitProfile == null || pitStatsPtl == null) {
+                                        addError("Player has missing Pit stats.")
+                                        return@construct
+                                    }
+                                    activeObject = pitStatsPtl
+                                    this + Stat<Int>("kills")
+                                    this + Stat<Int>("assists")
+                                    this + Stat<Int>("deaths")
+                                    activeObject = pitProfile
+                                    this + Stat<Int>("cash", "Gold")
+                                    this + Stat<Int>("renown")
+                                    activeObject = pitStatsPtl
+                                    this + Stat<Int>("max_streak", "Highest Killstreak")
+                                    this + Stat<Long>("damage_dealt")
+                                    this + Stat<Long>("damage_received")
+                                    activeObject = pitProfile
+                                    if (pitProfile.has("genesis_allegiance")) {
+                                        this + Stat<String>("genesis_allegiance") {
+                                            if (it == "ANGEL") "\u00a7bAngel" else "\u00a7cDemon"
+                                        }
+                                    }
+                                    addLine("Prestige" to (if (pitProfile.has("prestiges")) pitProfile["prestiges"].asJsonArray.size() else 0))
+                                    addLine("Pit Supporter" to (game["packages"]?.asJsonArray?.any {
+                                        try {
+                                            it.asString == "supporter"
+                                        } catch (_: UnsupportedOperationException) {
+                                            false
+                                        }
+                                    } ?: false))
+                                }
+                                "Quake" -> {
+                                    this + Stat<Int>("kills", "Solo Kills")
+                                    this + Stat<Int>("wins", "Solo Wins")
+                                    this + Stat<Int>("kills_teams", "Teams Kills")
+                                    this + Stat<Int>("wins_teams", "Teams Wins")
+                                    this + Stat.COINS
+                                    this + Stat<String>("trigger") {
+                                        when (it) {
+                                            "ONE_POINT_FIVE" -> "1.5s"
+                                            "ONE_POINT_FOUR" -> "1.4s"
+                                            "ONE_POINT_THREE" -> "1.3s"
+                                            "ONE_POINT_TWO" -> "1.2s"
+                                            "ONE_POINT_ONE" -> "1.1s"
+                                            "ONE_POINT_ZERO", "ONE" -> "1s"
+                                            "ZERO_POINT_NINE" -> "0.9s"
+                                            "ZERO_POINT_EIGHT_FIVE" -> "0.85s"
+                                            else -> it
+                                        }
+                                    }
+                                }
+                                "SkyClash" -> {
+                                    arrayOf("kills", "deaths", "wins", "coins").forEach { this + Stat<Int>(it) }
+                                    this + Stat<Int>("win_streak", "Winstreak")
+                                    this + Stat<Int>("card_packs")
+                                }
+                                "SkyWars" -> {
+                                    if (game.has("levelFormatted")) {
+                                        this + Stat<String>("levelFormatted", "SkyWars Level")
+                                    } else {
+                                        this + Stat<Long>("skywars_experience", "SkyWars Level") {
+                                            Utils.getSkyWarsLevel(it)
+                                        }
+                                    }
+                                    arrayOf("kills", "deaths", "wins", "coins").forEach { this + Stat<Int>(it) }
+                                    this + Stat<Int>("win_streak", "Winstreak")
+                                    this + Stat<Int>("souls")
+                                    this + Stat<Int>("heads")
+                                    this + Stat<Int>("shard", "Shards") { "$it/20000" }
+                                    this + Stat<Int>("opals")
+                                }
+                                "SpeedUHC" -> arrayOf("kills", "deaths", "wins", "coins", "winstreak").forEach {
+                                    this + Stat<Int>(it)
+                                }
+                                "SuperSmash" -> {
+                                    arrayOf("kills", "deaths", "wins", "coins").forEach { this + Stat<Int>(it) }
+                                    this + Stat<Int>("smashLevel", "Smash Level", '6') { "$it\u272b" }
+                                    val activeClass = game["active_class"]?.asString ?: return@construct
+                                    val prestige = game["pg_$activeClass"]?.asInt ?: 0
+                                    val level = game["lastLevel_$activeClass"]?.asInt ?: 0
+                                    addLine("Active Class" to "$activeClass (P$prestige Lv$level)")
+                                }
+                                "TNTGames" -> {
+                                    arrayOf(
+                                        "tntrun" to "TNT Run",
+                                        "pvprun" to "PVP Run",
+                                        "bowspleef" to "TNT Bowspleef",
+                                        "capture" to "TNT Wizards",
+                                        "tnttag" to "TNT Tag"
+                                    ).forEach { this + Stat<Int>("wins_${it.first}", "${it.second} Wins") }
+                                    this + Stat.COINS
+                                }
+                                "TrueCombat" -> {
+                                    arrayOf("kills", "deaths", "wins", "coins", "golden_skulls", "gold_dust").forEach {
+                                        this + Stat<Int>(it)
+                                    }
+                                }
+                                "UHC" -> {
+                                    arrayOf("kills", "deaths", "wins", "coins", "score", "heads_eaten").forEach {
+                                        this + Stat<Int>(it)
+                                    }
+                                }
+                                "VampireZ" -> {
+                                    arrayOf("human_wins", "vampire_wins", "zombie_kills", "coins").forEach {
+                                        this + Stat<Int>(it)
+                                    }
+                                }
+                                "Walls" -> {
+                                    arrayOf("kills", "deaths", "wins", "coins").forEach {
+                                        this + Stat<Int>(it)
+                                    }
+                                }
+                                "Walls3" -> {
+                                    this + Stat<Int>("kills")
+                                    this + Stat<Int>("total_final_kills", "Finals")
+                                    arrayOf("deaths", "final_deaths", "wins", "coins").forEach {
+                                        this + Stat<Int>(it)
+                                    }
+                                    this + Stat<String>("chosen_class")
+                                }
+                                "SkyBlock" -> {
+                                    addEmpty("todo lol") //todo skyblock
                                 }
                             }
                         }.send()
@@ -191,7 +415,16 @@ object StatsCommand : CommandBase() {
     override fun processCommand(sender: ICommandSender, args: Array<out String>): Unit = Multithreading.runAsync {
         when (args.size) {
             1 -> stats(args[0].lowercase(), null)
-            2 -> stats(args[0].lowercase(), args[1])
+            2 -> {
+                Utils.getGame(args[1]).run {
+                    if (this == null) {
+                        Utils.err("Invalid game :L")
+                        return@runAsync
+                    } else {
+                        stats(args[0].lowercase(), this)
+                    }
+                }
+            }
             else -> Utils.err("/stats <player> [game]")
         }
     }
@@ -200,9 +433,21 @@ object StatsCommand : CommandBase() {
 
     override fun addTabCompletionOptions(
         sender: ICommandSender,
-        args: Array<out String>,
+        args: Array<out String>?,
         pos: BlockPos
-    ): MutableList<String>? = null // todo
-
-    override fun isUsernameIndex(args: Array<out String>, index: Int): Boolean = true
+    ): MutableList<String>? {
+        if (args != null) {
+            when (args.size) {
+                1 -> {
+                    val p = UMinecraft.getWorld()?.playerEntities ?: return null
+                    val x = p.filter { it.gameProfile.id.version() == 4 }.map {
+                        it.gameProfile.name
+                    }
+                    return getListOfStringsMatchingLastWord(args, x)
+                }
+                2 -> return getListOfStringsMatchingLastWord(args, GameType.values().map { it.dbName.lowercase() })
+            }
+        }
+        return null
+    }
 }

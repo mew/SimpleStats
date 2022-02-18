@@ -49,6 +49,10 @@ class StatsBuilder(val player: JsonObject, val game: String? = null) {
         lines.add("$s of ${player.getFormattedPlayerName()}")
     }
 
+    fun addError(err: String) {
+        lines += "\u00a7c$err"
+    }
+
     fun addEmpty(display: String): Unit = addLine(display to "N/A", 'c')
 
     fun addLine(kvp: Pair<String, Any>, colour: Char? = null) {
@@ -58,7 +62,7 @@ class StatsBuilder(val player: JsonObject, val game: String? = null) {
             is Boolean -> if (kvp.second as Boolean) 'a' else 'c'
             else -> 'f'
         }
-        lines.add("${kvp.first}: \u00a7$c${kvp.second}")
+        lines += "${kvp.first}: \u00a7$c${kvp.second}"
     }
 
     fun send() {
